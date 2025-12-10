@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useData } from '../contexts/DataContext';
-import { ArrowLeft, Moon, Sun, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, ChevronDown, Globe, DollarSign, Check } from 'lucide-react';
 
 interface SettingsScreenProps {
   onBack: () => void;
@@ -28,7 +28,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in landscape:pb-6 landscape:pr-24 min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors">
+    <div className="p-6 space-y-6 animate-fade-in min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors">
       <header className="flex items-center space-x-3 sticky top-0 bg-gray-50 dark:bg-slate-900 z-10 py-2">
         <button 
           onClick={onBack}
@@ -39,69 +39,87 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Settings')}</h1>
       </header>
 
-      {/* Theme Section - Toggle */}
-      <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 flex justify-between items-center transition-colors">
-        <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-full transition-colors ${theme === 'light' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-900 text-indigo-300'}`}>
-            {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
-          </div>
-          <div>
-             <h2 className="font-semibold text-gray-800 dark:text-white">{t('Appearance')}</h2>
-             <p className="text-xs text-gray-500 dark:text-slate-400">{theme === 'light' ? t('Light') : t('Dark')}</p>
-          </div>
-        </div>
-        
-        {/* Toggle Switch */}
-        <button 
+      <div className="max-w-2xl mx-auto w-full space-y-6">
+        {/* Theme Section - Toggle */}
+        <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 flex justify-between items-center transition-colors">
+            <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-full transition-colors ${theme === 'light' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-900 text-indigo-300'}`}>
+                {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+            </div>
+            <div>
+                <h2 className="font-semibold text-gray-800 dark:text-white">{t('Appearance')}</h2>
+                <p className="text-xs text-gray-500 dark:text-slate-400">{theme === 'light' ? t('Light') : t('Dark')}</p>
+            </div>
+            </div>
+            
+            <button 
             onClick={toggleTheme}
-            className={`w-14 h-8 rounded-full transition-colors relative flex items-center px-1 ${theme === 'dark' ? 'bg-teal-600' : 'bg-gray-300'}`}
-            aria-label="Toggle Theme"
-        >
-            <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${theme === 'dark' ? 'translate-x-6' : 'translate-x-0'}`} />
-        </button>
-      </section>
-
-      {/* Language Section - Dropdown */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">{t('Language')}</h2>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-1 relative transition-colors">
-             <select 
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full bg-transparent p-4 text-gray-800 dark:text-white appearance-none focus:outline-none z-10 relative font-medium"
+            className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 ${theme === 'light' ? 'bg-gray-300' : 'bg-teal-600'}`}
             >
-                {languages.map(lang => (
-                    <option key={lang.code} value={lang.code} className="bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
-                        {lang.name} - {lang.nativeName}
-                    </option>
-                ))}
-            </select>
-             <ChevronDown size={20} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
-        </div>
-      </section>
+            <div className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ${theme === 'light' ? 'translate-x-0' : 'translate-x-6'}`}></div>
+            </button>
+        </section>
 
-      {/* Currency Section - Dropdown */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">{t('Primary Currency')}</h2>
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 p-1 relative transition-colors">
-            <select 
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                className="w-full bg-transparent p-4 text-gray-800 dark:text-white appearance-none focus:outline-none z-10 relative font-medium"
-            >
-                {currencies.map(curr => (
-                    <option key={curr.code} value={curr.symbol} className="bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
-                        {curr.code} ({curr.symbol}) - {curr.name}
-                    </option>
-                ))}
-            </select>
-            <ChevronDown size={20} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
-        </div>
-      </section>
+        {/* Language Section */}
+        <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
+            <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                <Globe size={20} />
+            </div>
+            <h2 className="font-semibold text-gray-800 dark:text-white">{t('Language')}</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-2">
+            {languages.map(lang => (
+                <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`flex justify-between items-center p-3 rounded-xl border transition-colors ${
+                    language === lang.code 
+                    ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800/50' 
+                    : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50'
+                }`}
+                >
+                <div className="flex flex-col items-start">
+                    <span className={`text-sm font-medium ${language === lang.code ? 'text-teal-800 dark:text-teal-200' : 'text-gray-700 dark:text-slate-300'}`}>{lang.nativeName}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{lang.name}</span>
+                </div>
+                {language === lang.code && <Check size={18} className="text-teal-600 dark:text-teal-400" />}
+                </button>
+            ))}
+            </div>
+        </section>
 
-      <div className="mt-auto pt-8 text-center text-xs text-gray-400 dark:text-gray-600">
-        <p>Kanakkuvazhakku v1.3.0</p>
+        {/* Currency Section */}
+        <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
+            <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full">
+                <DollarSign size={20} />
+            </div>
+            <h2 className="font-semibold text-gray-800 dark:text-white">{t('Primary Currency')}</h2>
+            </div>
+
+            <div className="relative">
+                <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="w-full pl-4 pr-10 py-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl appearance-none text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                    {currencies.map(curr => (
+                        <option key={curr.code} value={curr.symbol}>
+                            {curr.symbol} - {curr.name} ({curr.code})
+                        </option>
+                    ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={18} />
+            </div>
+        </section>
       </div>
+      
+      <div className="mt-auto pt-6 text-center">
+         <p className="text-xs text-gray-400 dark:text-slate-600">App Version 1.0.0 (Offline Mode)</p>
+      </div>
+
     </div>
   );
 };

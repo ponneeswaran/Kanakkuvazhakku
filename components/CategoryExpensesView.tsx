@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Category, Expense } from '../types';
@@ -103,7 +104,7 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
   };
 
   return (
-    <div className="p-4 pb-24 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-950 min-h-full landscape:pb-6 landscape:pr-24 transition-colors">
+    <div className="p-6 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
       {/* Header */}
       <header className="flex items-center space-x-3 mb-2 sticky top-0 bg-slate-50 dark:bg-slate-950 z-10 py-2 transition-colors">
         <button 
@@ -119,7 +120,7 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
       </header>
 
       {/* Controls */}
-      <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 space-y-3 transition-colors">
+      <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 space-y-3 transition-colors max-w-4xl">
         <div className="flex justify-between items-center">
             {/* Sort Dropdown */}
             <div className="relative flex items-center space-x-2">
@@ -234,7 +235,8 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
                 <p>{(dateError || amountError) ? "Please fix filter errors" : t("No expenses found matching your criteria.")}</p>
             </div>
         ) : (
-            filteredAndSortedExpenses.map(expense => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredAndSortedExpenses.map(expense => (
                 <div key={expense.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700 flex justify-between items-center transition-colors">
                     <div className="flex items-center space-x-3">
                          <div className="bg-gray-100 dark:bg-slate-700 w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-slate-400">
@@ -259,7 +261,8 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
                         </button>
                     </div>
                 </div>
-            ))
+            ))}
+            </div>
         )}
       </div>
     </div>

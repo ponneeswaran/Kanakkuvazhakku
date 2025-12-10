@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { User, Settings, Shield, LogOut, ChevronRight, ArrowLeft, Download, Upload, FileText, Fingerprint, ToggleLeft, ToggleRight } from 'lucide-react';
@@ -75,7 +74,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
   ];
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in landscape:pb-6 landscape:pr-24 min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="p-6 space-y-6 animate-fade-in min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors">
       <header className="flex items-center space-x-3 sticky top-0 bg-gray-50 dark:bg-slate-950 z-10 py-2 transition-colors">
         <button 
           onClick={onBack}
@@ -98,117 +97,119 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
         <p className="text-sm text-gray-500 dark:text-slate-400">{userProfile?.email || t('Free Account')}</p>
       </div>
 
-      {/* Main Settings Menu */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
-        {menuItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={item.onClick}
-            className={`w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${
-              index !== menuItems.length - 1 ? 'border-b border-gray-100 dark:border-slate-700' : ''
-            }`}
-          >
-            <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
-              <item.icon size={20} className="text-gray-500 dark:text-slate-400" />
-              <span className="font-medium">{t(item.label)}</span>
+      <div className="max-w-2xl mx-auto w-full space-y-6">
+        {/* Main Settings Menu */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            {menuItems.map((item, index) => (
+            <button
+                key={index}
+                onClick={item.onClick}
+                className={`w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${
+                index !== menuItems.length - 1 ? 'border-b border-gray-100 dark:border-slate-700' : ''
+                }`}
+            >
+                <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
+                <item.icon size={20} className="text-gray-500 dark:text-slate-400" />
+                <span className="font-medium">{t(item.label)}</span>
+                </div>
+                <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
+            </button>
+            ))}
+            
+            {/* Security Section with Biometric Toggle */}
+            <div className="p-4 border-t border-gray-100 dark:border-slate-700">
+                <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200 mb-2">
+                    <Shield size={20} className="text-gray-500 dark:text-slate-400" />
+                    <span className="font-medium">{t('Security and Privacy')}</span>
+                </div>
+                
+                {isBiometricSupported ? (
+                    <div className="flex items-center justify-between pl-8 mt-3">
+                        <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
+                            <Fingerprint size={16} />
+                            <span>{t('Biometric Unlock')}</span>
+                        </div>
+                        <button onClick={handleBiometricToggle} className="text-teal-600 dark:text-teal-400">
+                            {userProfile?.biometricEnabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-gray-300 dark:text-slate-600" />}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="pl-8 mt-2 text-xs text-gray-400">{t('biometric_not_supported')}</div>
+                )}
             </div>
-            <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
-          </button>
-        ))}
-        
-        {/* Security Section with Biometric Toggle */}
-        <div className="p-4 border-t border-gray-100 dark:border-slate-700">
-            <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200 mb-2">
-                 <Shield size={20} className="text-gray-500 dark:text-slate-400" />
-                 <span className="font-medium">{t('Security and Privacy')}</span>
+        </div>
+
+        {/* Data Management Section */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            <div className="p-4 border-b border-gray-100 dark:border-slate-700">
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t('Data Management')}</h3>
             </div>
             
-            {isBiometricSupported ? (
-                <div className="flex items-center justify-between pl-8 mt-3">
-                     <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-slate-300">
-                        <Fingerprint size={16} />
-                        <span>{t('Biometric Unlock')}</span>
-                     </div>
-                     <button onClick={handleBiometricToggle} className="text-teal-600 dark:text-teal-400">
-                         {userProfile?.biometricEnabled ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-gray-300 dark:text-slate-600" />}
-                     </button>
+            <button
+                onClick={handleBackup}
+                disabled={isBackingUp}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border-b border-gray-100 dark:border-slate-700"
+            >
+                <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
+                <Download size={20} className="text-teal-500" />
+                <div className="text-left">
+                    <span className="font-medium block">{isBackingUp ? t('Sending Backup...') : t('Backup Data')}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{t('backup_desc')}</span>
                 </div>
-            ) : (
-                <div className="pl-8 mt-2 text-xs text-gray-400">{t('biometric_not_supported')}</div>
-            )}
+                </div>
+                <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
+            </button>
+
+            <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border-b border-gray-100 dark:border-slate-700"
+            >
+                <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
+                <FileText size={20} className="text-blue-500" />
+                <div className="text-left">
+                    <span className="font-medium block">{isExporting ? t('Exporting...') : t('Export CSV')}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{t('export_desc')}</span>
+                </div>
+                </div>
+                <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
+            </button>
+
+            <button
+                onClick={handleImportClick}
+                disabled={isImporting}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+            >
+                <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
+                <Upload size={20} className="text-purple-500" />
+                <div className="text-left">
+                    <span className="font-medium block">{isImporting ? t('Importing...') : t('Import Backup')}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{t('import_desc')}</span>
+                </div>
+                </div>
+                <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
+            </button>
+            {/* Hidden File Input */}
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept=".kbf" // Kanakku Backup File
+                onChange={handleFileChange}
+            />
         </div>
-      </div>
 
-      {/* Data Management Section */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
-          <div className="p-4 border-b border-gray-100 dark:border-slate-700">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{t('Data Management')}</h3>
-          </div>
-          
-          <button
-            onClick={handleBackup}
-            disabled={isBackingUp}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border-b border-gray-100 dark:border-slate-700"
-          >
-            <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
-              <Download size={20} className="text-teal-500" />
-              <div className="text-left">
-                  <span className="font-medium block">{isBackingUp ? t('Sending Backup...') : t('Backup Data')}</span>
-                  <span className="text-xs text-gray-400 dark:text-slate-500">{t('backup_desc')}</span>
-              </div>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
+            <button
+            onClick={logout}
+            className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400"
+            >
+            <div className="flex items-center space-x-3">
+                <LogOut size={20} />
+                <span className="font-medium">{t('Log Out')}</span>
             </div>
-            <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
-          </button>
-
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border-b border-gray-100 dark:border-slate-700"
-          >
-            <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
-              <FileText size={20} className="text-blue-500" />
-              <div className="text-left">
-                  <span className="font-medium block">{isExporting ? t('Exporting...') : t('Export CSV')}</span>
-                  <span className="text-xs text-gray-400 dark:text-slate-500">{t('export_desc')}</span>
-              </div>
-            </div>
-            <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
-          </button>
-
-          <button
-            onClick={handleImportClick}
-            disabled={isImporting}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-          >
-            <div className="flex items-center space-x-3 text-gray-700 dark:text-slate-200">
-              <Upload size={20} className="text-purple-500" />
-              <div className="text-left">
-                  <span className="font-medium block">{isImporting ? t('Importing...') : t('Import Backup')}</span>
-                  <span className="text-xs text-gray-400 dark:text-slate-500">{t('import_desc')}</span>
-              </div>
-            </div>
-            <ChevronRight size={16} className="text-gray-300 dark:text-slate-600" />
-          </button>
-          {/* Hidden File Input */}
-          <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept=".kbf" // Kanakku Backup File
-              onChange={handleFileChange}
-          />
-      </div>
-
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors">
-        <button
-          onClick={logout}
-          className="w-full flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-red-600 dark:text-red-400"
-        >
-          <div className="flex items-center space-x-3">
-            <LogOut size={20} />
-            <span className="font-medium">{t('Log Out')}</span>
-          </div>
-        </button>
+            </button>
+        </div>
       </div>
 
     </div>

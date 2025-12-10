@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Category, Budget } from '../types';
@@ -59,13 +60,13 @@ const BudgetView: React.FC<BudgetViewProps> = ({ onCategorySelect }) => {
   }
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in landscape:pb-6 landscape:pr-24">
+    <div className="p-6 space-y-6 animate-fade-in min-h-screen">
       <header className="mb-4">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Monthly Budgets')}</h1>
         <p className="text-sm text-gray-500 dark:text-slate-400">{t('Track your limits for this month')}</p>
       </header>
 
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {categories.map(category => {
           const { spent, limit, percentage } = calculateProgress(category);
           const isOverBudget = spent > limit && limit > 0;

@@ -1,10 +1,8 @@
 
-
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { Income, IncomeStatus } from '../types';
-import { Plus, CheckCircle, Clock, AlertTriangle, Phone, MessageCircle, Trash2, Calendar } from 'lucide-react';
-import IncomeForm from './IncomeForm';
+import { Income } from '../types';
+import { CheckCircle, Clock, AlertTriangle, Phone, MessageCircle, Trash2 } from 'lucide-react';
 
 interface IncomeCardProps {
     income: Income;
@@ -93,14 +91,11 @@ const IncomeCard: React.FC<IncomeCardProps> = ({ income, currency, t, onFollowUp
 
 const IncomeScreen: React.FC = () => {
   const { incomes, markIncomeReceived, deleteIncome, currency, t } = useData();
-  const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'Expected' | 'Received'>('Expected');
   const [followUpItem, setFollowUpItem] = useState<Income | null>(null);
 
   // Group by status
   const overdueIncomes = incomes.filter(i => i.status === 'Overdue');
   const expectedIncomes = incomes.filter(i => i.status === 'Expected').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const receivedIncomes = incomes.filter(i => i.status === 'Received').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const handleWhatsAppReminder = (income: Income) => {
       if (!income.tenantContact) {
@@ -123,42 +118,19 @@ const IncomeScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-4 pb-24 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-900 min-h-screen landscape:pb-6 landscape:pr-24 transition-colors">
+    <div className="p-6 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-900 min-h-screen transition-colors">
       <header className="flex justify-between items-center mb-2 sticky top-0 z-10 bg-slate-50 dark:bg-slate-950 py-2">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Income & Rent')}</h1>
-        <button 
-            onClick={() => setShowForm(true)}
-            className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform"
-        >
-            <Plus size={24} />
-        </button>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Income')}</h1>
       </header>
 
-      {/* Tabs */}
-      <div className="flex space-x-2 bg-white dark:bg-slate-800 p-1 rounded-xl border border-gray-100 dark:border-slate-700">
-          <button 
-              onClick={() => setActiveTab('Expected')}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${activeTab === 'Expected' ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' : 'text-gray-500 dark:text-slate-400'}`}
-          >
-              {t('Expected')} {overdueIncomes.length > 0 && <span className="ml-1 text-xs bg-red-500 text-white px-1.5 rounded-full">{overdueIncomes.length}</span>}
-          </button>
-          <button 
-              onClick={() => setActiveTab('Received')}
-              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${activeTab === 'Received' ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' : 'text-gray-500 dark:text-slate-400'}`}
-          >
-              {t('History')}
-          </button>
-      </div>
-
-      <div className="space-y-4">
-          {activeTab === 'Expected' ? (
-              <>
-                {/* Overdue Section */}
-                {overdueIncomes.length > 0 && (
-                    <div className="space-y-2">
-                        <h2 className="text-xs font-bold text-red-500 uppercase tracking-wide ml-1 flex items-center">
-                            <AlertTriangle size={12} className="mr-1" /> {t('Action Required')}
-                        </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Overdue Section */}
+            {overdueIncomes.length > 0 && (
+                <div className="space-y-2 col-span-full">
+                    <h2 className="text-xs font-bold text-red-500 uppercase tracking-wide ml-1 flex items-center">
+                        <AlertTriangle size={12} className="mr-1" /> {t('Action Required')}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {overdueIncomes.map(inc => (
                             <IncomeCard 
                                 key={inc.id} 
@@ -171,34 +143,17 @@ const IncomeScreen: React.FC = () => {
                             />
                         ))}
                     </div>
-                )}
-                
-                {/* Upcoming Section */}
-                <div className="space-y-2">
-                    <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide ml-1">{t('Upcoming')}</h2>
-                    {expectedIncomes.length === 0 ? (
-                        <div className="text-center py-10 text-gray-400 text-sm">{t('No upcoming income scheduled.')}</div>
-                    ) : (
-                        expectedIncomes.map(inc => (
-                            <IncomeCard 
-                                key={inc.id} 
-                                income={inc} 
-                                currency={currency} 
-                                t={t} 
-                                onFollowUp={setFollowUpItem}
-                                onMarkReceived={markIncomeReceived}
-                                onDelete={deleteIncome}
-                            />
-                        ))
-                    )}
                 </div>
-              </>
-          ) : (
-              <div className="space-y-2">
-                   {receivedIncomes.length === 0 ? (
-                        <div className="text-center py-10 text-gray-400 text-sm">{t('No income history yet.')}</div>
-                    ) : (
-                        receivedIncomes.map(inc => (
+            )}
+            
+            {/* Upcoming Section */}
+            <div className="space-y-2 col-span-full">
+                <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide ml-1">{t('Upcoming')}</h2>
+                {expectedIncomes.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400 text-sm">{t('No upcoming income scheduled.')}</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {expectedIncomes.map(inc => (
                             <IncomeCard 
                                 key={inc.id} 
                                 income={inc} 
@@ -208,13 +163,11 @@ const IncomeScreen: React.FC = () => {
                                 onMarkReceived={markIncomeReceived}
                                 onDelete={deleteIncome}
                             />
-                        ))
-                    )}
-              </div>
-          )}
+                        ))}
+                    </div>
+                )}
+            </div>
       </div>
-
-      {showForm && <IncomeForm onClose={() => setShowForm(false)} />}
 
       {/* Rent Follow Up Sheet */}
       {followUpItem && (

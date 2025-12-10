@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { DataProvider, useData } from './contexts/DataContext';
 import Layout from './components/Layout';
@@ -68,23 +67,6 @@ const AppContent: React.FC = () => {
   }
 
   // 5. Main App
-  // Handle Sub-screens (Account, Settings, etc. that cover the main layout)
-  if (currentTab === 'account') {
-      return <AccountScreen 
-          onBack={() => setCurrentTab('dashboard')} 
-          onNavigateToProfile={() => setCurrentTab('profile_edit')}
-          onNavigateToSettings={() => setCurrentTab('settings')}
-      />;
-  }
-
-  if (currentTab === 'profile_edit') {
-      return <ProfileEditScreen onBack={() => setCurrentTab('account')} />;
-  }
-
-  if (currentTab === 'settings') {
-      return <SettingsScreen onBack={() => setCurrentTab('account')} />;
-  }
-
   return (
     <Layout activeTab={currentTab} onTabChange={handleTabChange}>
       {currentTab === 'dashboard' && (
@@ -98,7 +80,10 @@ const AppContent: React.FC = () => {
       )}
       
       {currentTab === 'expenses' && (
-        <ExpenseList initialCategory={historyFilter} />
+        <ExpenseList 
+            initialCategory={historyFilter} 
+            onNavigateToBudget={() => setCurrentTab('budgets')}
+        />
       )}
 
       {currentTab === 'income' && (
@@ -117,6 +102,23 @@ const AppContent: React.FC = () => {
       )}
 
       {currentTab === 'ai' && <AIChat />}
+
+      {/* Account Sub-Screens rendered within Layout to keep footer visible */}
+      {currentTab === 'account' && (
+          <AccountScreen 
+              onBack={() => setCurrentTab('dashboard')} 
+              onNavigateToProfile={() => setCurrentTab('profile_edit')}
+              onNavigateToSettings={() => setCurrentTab('settings')}
+          />
+      )}
+
+      {currentTab === 'profile_edit' && (
+          <ProfileEditScreen onBack={() => setCurrentTab('account')} />
+      )}
+
+      {currentTab === 'settings' && (
+          <SettingsScreen onBack={() => setCurrentTab('account')} />
+      )}
     </Layout>
   );
 };

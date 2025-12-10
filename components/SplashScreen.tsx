@@ -59,7 +59,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
       {/* Version Number */}
       <div className="absolute bottom-6 z-10 text-[10px] text-teal-100/50 font-medium tracking-widest">
-        v1.3.0
+        v1.0.0
       </div>
     </div>
   );

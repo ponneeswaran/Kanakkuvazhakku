@@ -98,8 +98,8 @@ const AIChat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] landscape:h-screen landscape:mr-20 bg-gray-50 dark:bg-slate-950 transition-colors">
-      <header className="p-4 bg-white dark:bg-slate-900 shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center space-x-3 transition-colors">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-slate-950 transition-colors">
+      <header className="p-4 bg-white dark:bg-slate-900 shadow-sm border-b border-gray-100 dark:border-slate-800 flex items-center space-x-3 transition-colors sticky top-0 z-10">
           <div className="bg-teal-100 dark:bg-teal-900/30 p-2 rounded-full text-teal-700 dark:text-teal-400">
               <Bot size={24} />
           </div>
@@ -140,7 +140,7 @@ const AIChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 pb-4 transition-colors">
+      <div className="p-4 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 transition-colors">
         <div className="flex space-x-2">
           <input
             type="text"

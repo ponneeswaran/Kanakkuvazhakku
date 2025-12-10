@@ -70,6 +70,30 @@ export const parseExpenseFromText = async (text: string): Promise<any> => {
     return JSON.parse(response.text || "{}");
 }
 
+export const parseIncomeFromText = async (text: string): Promise<any> => {
+    if (!apiKey) throw new Error("API Key missing");
+
+    const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: `Extract income details from this text: "${text}". Return JSON.`,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    amount: { type: Type.NUMBER },
+                    category: { type: Type.STRING, enum: ['Salary', 'Rent', 'Interest', 'Business', 'Gift', 'Other'] },
+                    source: { type: Type.STRING },
+                    date: { type: Type.STRING, description: "YYYY-MM-DD format. Use today if not specified." }
+                },
+                required: ['amount', 'category', 'source']
+            }
+        }
+    });
+
+    return JSON.parse(response.text || "{}");
+}
+
 const addExpenseTool: FunctionDeclaration = {
   name: "add_expense",
   description: "Add a new expense transaction to the tracking system.",

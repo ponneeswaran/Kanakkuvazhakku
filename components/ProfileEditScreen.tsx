@@ -73,7 +73,7 @@ const ProfileEditScreen: React.FC<ProfileEditScreenProps> = ({ onBack }) => {
   }
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in landscape:pb-6 landscape:pr-24 min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors">
+    <div className="p-6 space-y-6 animate-fade-in min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 transition-colors">
       <header className="flex items-center space-x-3 sticky top-0 bg-gray-50 dark:bg-slate-950 z-10 py-2 transition-colors">
         <button 
           onClick={onBack}
@@ -179,4 +179,3 @@ const ProfileEditScreen: React.FC<ProfileEditScreenProps> = ({ onBack }) => {
 };
 
 export default ProfileEditScreen;
-    

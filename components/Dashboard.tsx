@@ -1,5 +1,4 @@
 
-
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { generateSpendingInsight } from '../services/geminiService';
@@ -436,13 +435,34 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
     return { data, total, label };
   }, [expenses, timeRange, categoryViewDate, customStart, customEnd]);
 
-  const totalSpent = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses]);
-  
-  // Total Income (Received Only)
-  const totalIncome = useMemo(() => incomes.filter(i => i.status === 'Received').reduce((sum, i) => sum + i.amount, 0), [incomes]);
+  // Card Calculations for current view
+  const currentViewStats = useMemo(() => {
+      const { start, end } = getCategoryRangeBounds(timeRange, viewDate);
+      
+      const periodExpense = expenses
+          .filter(e => {
+              const d = new Date(e.date);
+              return d >= start && d <= end;
+          })
+          .reduce((sum, e) => sum + e.amount, 0);
 
-  // Net Balance
-  const netBalance = totalIncome - totalSpent;
+      const periodIncome = incomes
+          .filter(i => i.status === 'Received')
+          .filter(i => {
+              const d = new Date(i.date);
+              return d >= start && d <= end;
+          })
+          .reduce((sum, i) => sum + i.amount, 0);
+    
+      const today = new Date().toISOString().split('T')[0];
+      const todayExpense = expenses
+          .filter(e => e.date === today)
+          .reduce((sum, e) => sum + e.amount, 0);
+
+      return { periodExpense, periodIncome, todayExpense };
+
+  }, [expenses, incomes, timeRange, viewDate, customStart, customEnd]);
+
 
   // Recent expenses for the list (Limit to 5)
   const recentExpenses = useMemo(() => {
@@ -450,7 +470,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
   }, [expenses]);
 
   return (
-    <div className="p-4 pb-24 space-y-6 animate-fade-in landscape:pb-6 landscape:pr-24 min-h-full">
+    <div className="p-6 space-y-6 animate-fade-in min-h-full">
       {/* Header */}
       <header className="mb-4">
         <div className="flex justify-between items-start mb-2">
@@ -470,7 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       </header>
 
       {/* Insight Card */}
-      <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
             <Sparkles size={100} />
         </div>
@@ -491,32 +511,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
         </div>
       </div>
 
-      {/* Net Balance Card */}
-      <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
-          <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Net Balance')}</h3>
-          </div>
-          <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-4">
-              {currency}{netBalance.toFixed(2)}
-          </div>
-          <div className="grid grid-cols-2 gap-4 border-t border-gray-100 dark:border-slate-700 pt-4">
-               <div className="flex items-center space-x-2">
-                   <ArrowDownCircle size={20} className="text-green-500" />
-                   <div>
-                       <p className="text-xs text-gray-400 dark:text-slate-500">{t('Income')}</p>
-                       <p className="font-bold text-gray-800 dark:text-white">{currency}{totalIncome.toFixed(0)}</p>
-                   </div>
-               </div>
-               <div className="flex items-center space-x-2">
-                   <ArrowUpCircle size={20} className="text-red-500" />
-                   <div>
-                       <p className="text-xs text-gray-400 dark:text-slate-500">{t('Expense')}</p>
-                       <p className="font-bold text-gray-800 dark:text-white">{currency}{totalSpent.toFixed(0)}</p>
-                   </div>
-               </div>
-          </div>
-      </div>
-
       {/* Time Frame Selection */}
       <div className="flex flex-col gap-2 relative">
           <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700">
@@ -525,7 +519,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
                   <select 
                       value={timeRange}
                       onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                      className="w-full bg-gray-100 dark:bg-slate-700 border border-transparent hover:border-gray-300 dark:hover:border-slate-500 rounded-lg text-xs font-semibold py-1.5 px-2 pr-6 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 dark:text-white cursor-pointer transition-all"
+                      className="w-full bg-gray-100 dark:bg-slate-700 border border-transparent hover:border-gray-300 dark:hover:border-slate-500 rounded-lg text-xs font-semibold py-1.5 px-2 pr-6 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 dark:text-white cursor-pointer transition-all"
                   >
                       <option value="Daily">{t('Daily')}</option>
                       <option value="Weekly">{t('Weekly')}</option>
@@ -575,132 +569,177 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
           title={datePickerConfig.mode === 'start' ? 'Start Date' : 'End Date'}
       />
 
-      {/* Spending Trends Chart */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-                <TrendingUp size={18} className="mr-2 text-teal-500" />
-                {t('Spending Trends')}
-            </h3>
-        </div>
-
-        <div 
-            className="h-48 w-full select-none"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-        >
-            <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                    <defs>
-                        <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{fontSize: 10, fill: '#94A3B8'}} 
-                        interval="preserveStartEnd"
-                    />
-                    <YAxis hide />
-                    <RechartsTooltip 
-                        formatter={(value) => [`${currency}${value}`, 'Spent']}
-                        contentStyle={{ backgroundColor: theme === 'dark' ? '#1E293B' : '#FFF', borderColor: theme === 'dark' ? '#334155' : '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: theme === 'dark' ? '#FFF' : '#000' }}
-                        itemStyle={{ color: theme === 'dark' ? '#FFF' : '#000' }}
-                    />
-                    <Area type="monotone" dataKey="amount" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
-                </AreaChart>
-            </ResponsiveContainer>
-        </div>
-        {timeRange !== 'Custom' && (
-            <div className="flex justify-between items-center mt-2 px-2 text-xs text-gray-400 dark:text-slate-500">
-                 <button onClick={() => handleChartNavigate(-1)}><ChevronLeft size={16} /></button>
-                 <span>Swipe to navigate</span>
-                 <button onClick={() => handleChartNavigate(1)}><ChevronRight size={16} /></button>
-            </div>
-        )}
-      </div>
-
-      {/* Category Breakdown */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
-          <div className="flex flex-col mb-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-                    <PieChartIcon size={18} className="mr-2 text-teal-500" />
-                    {t('Category Breakdown')}
-                </h3>
-              </div>
-              
-              {/* Controls */}
-              {timeRange !== 'Custom' && (
-                  <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-slate-700/50 p-2 rounded-lg">
-                        <button onClick={() => handleCategoryNavigate(-1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">{categoryStats.label}</span>
-                        <button onClick={() => handleCategoryNavigate(1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
-                            <ChevronRight size={16} />
-                        </button>
-                  </div>
-              )}
+      {/* Income & Expense Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Income Card */}
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-teal-100 dark:border-slate-700">
+               <div className="flex items-center space-x-2 mb-3">
+                   <div className="bg-teal-50 dark:bg-teal-900/30 p-2 rounded-full text-teal-600 dark:text-teal-400">
+                        <ArrowDownCircle size={20} />
+                   </div>
+                   <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Income')}</h3>
+               </div>
+               <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                   {currency}{currentViewStats.periodIncome.toFixed(0)}
+               </div>
+               <p className="text-[10px] text-gray-400 mt-1">{t('Total for Period')}</p>
           </div>
 
-          {categoryStats.total === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 opacity-70">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-2">
-                      <PieChartIcon size={24} className="text-gray-400 dark:text-slate-500" />
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-slate-400">{t('No expenses found for this period')}</p>
-              </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row items-center animate-fade-in">
-                <div className="h-48 w-48 relative mb-4 sm:mb-0 sm:mr-6">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={categoryStats.data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={70}
-                                paddingAngle={2}
-                                dataKey="value"
-                            >
-                                {categoryStats.data.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={CATEGORY_COLOR_MAP[entry.name] || COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                        </PieChart>
-                    </ResponsiveContainer>
-                    {/* Center Label */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-                        <span className="text-[10px] text-gray-400 dark:text-slate-500 uppercase">{t('Total')}</span>
-                        <span className="text-xs font-bold text-gray-800 dark:text-white">{currency}{categoryStats.total.toFixed(0)}</span>
-                    </div>
+          {/* Expense Card */}
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-100 dark:border-slate-700 lg:col-span-3">
+               <div className="flex items-center space-x-2 mb-3">
+                   <div className="bg-red-50 dark:bg-red-900/30 p-2 rounded-full text-red-600 dark:text-red-400">
+                        <ArrowUpCircle size={20} />
+                   </div>
+                   <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Expense')}</h3>
+               </div>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   <div>
+                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                           {currency}{currentViewStats.periodExpense.toFixed(0)}
+                       </div>
+                       <p className="text-[10px] text-gray-400">{t('Total for Period')}</p>
+                   </div>
+                   <div className="pt-2 sm:pt-0 sm:border-l border-t sm:border-t-0 border-gray-100 dark:border-slate-700 sm:pl-4">
+                       <div className="text-lg font-semibold text-gray-800 dark:text-slate-200">
+                           {currency}{currentViewStats.todayExpense.toFixed(0)}
+                       </div>
+                       <p className="text-[10px] text-gray-400">{t('Today')}</p>
+                   </div>
+               </div>
+          </div>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Spending Trends Chart */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                    <TrendingUp size={18} className="mr-2 text-teal-500" />
+                    {t('Spending Trends')}
+                </h3>
+            </div>
+
+            <div 
+                className="h-64 w-full select-none"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+            >
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                        <defs>
+                            <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                        <XAxis 
+                            dataKey="name" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 10, fill: '#94A3B8'}} 
+                            interval="preserveStartEnd"
+                        />
+                        <YAxis hide />
+                        <RechartsTooltip 
+                            formatter={(value) => [`${currency}${value}`, 'Spent']}
+                            contentStyle={{ backgroundColor: theme === 'dark' ? '#1E293B' : '#FFF', borderColor: theme === 'dark' ? '#334155' : '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: theme === 'dark' ? '#FFF' : '#000' }}
+                            itemStyle={{ color: theme === 'dark' ? '#FFF' : '#000' }}
+                        />
+                        <Area type="monotone" dataKey="amount" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+            {timeRange !== 'Custom' && (
+                <div className="flex justify-between items-center mt-2 px-2 text-xs text-gray-400 dark:text-slate-500">
+                    <button onClick={() => handleChartNavigate(-1)}><ChevronLeft size={16} /></button>
+                    <span>Swipe to navigate</span>
+                    <button onClick={() => handleChartNavigate(1)}><ChevronRight size={16} /></button>
+                </div>
+            )}
+        </div>
+
+        {/* Category Breakdown */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
+            <div className="flex flex-col mb-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                        <PieChartIcon size={18} className="mr-2 text-teal-500" />
+                        {t('Category Breakdown')}
+                    </h3>
                 </div>
                 
-                <div className="flex-1 w-full space-y-2">
-                    {categoryStats.data.slice(0, 4).map((item, index) => (
-                        <div key={item.name} className="flex items-center justify-between text-sm">
-                            <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLOR_MAP[item.name] || COLORS[index % COLORS.length] }}></div>
-                                <span className="text-gray-700 dark:text-slate-300">{t(item.name)}</span>
-                            </div>
-                            <span className="font-medium text-gray-800 dark:text-white">{currency}{item.value.toFixed(0)}</span>
-                        </div>
-                    ))}
-                    {categoryStats.data.length > 4 && (
-                        <div className="text-xs text-center text-teal-600 dark:text-teal-400 pt-1">
-                            + {categoryStats.data.length - 4} more
-                        </div>
-                    )}
-                </div>
+                {/* Controls */}
+                {timeRange !== 'Custom' && (
+                    <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-slate-700/50 p-2 rounded-lg">
+                            <button onClick={() => handleCategoryNavigate(-1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
+                                <ChevronLeft size={16} />
+                            </button>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">{categoryStats.label}</span>
+                            <button onClick={() => handleCategoryNavigate(1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
+                                <ChevronRight size={16} />
+                            </button>
+                    </div>
+                )}
             </div>
-          )}
+
+            {categoryStats.total === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 opacity-70 h-64">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-2">
+                        <PieChartIcon size={24} className="text-gray-400 dark:text-slate-500" />
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{t('No expenses found for this period')}</p>
+                </div>
+            ) : (
+                <div className="flex flex-col sm:flex-row items-center animate-fade-in h-64">
+                    <div className="h-full w-full sm:w-1/2 relative mb-4 sm:mb-0 sm:mr-6">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={categoryStats.data}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={90}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                >
+                                    {categoryStats.data.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={CATEGORY_COLOR_MAP[entry.name] || COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                            </PieChart>
+                        </ResponsiveContainer>
+                        {/* Center Label */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
+                            <span className="text-[10px] text-gray-400 dark:text-slate-500 uppercase">{t('Total')}</span>
+                            <span className="text-xs font-bold text-gray-800 dark:text-white">{currency}{categoryStats.total.toFixed(0)}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full">
+                        {categoryStats.data.slice(0, 5).map((item, index) => (
+                            <div key={item.name} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLOR_MAP[item.name] || COLORS[index % COLORS.length] }}></div>
+                                    <span className="text-gray-700 dark:text-slate-300">{t(item.name)}</span>
+                                </div>
+                                <span className="font-medium text-gray-800 dark:text-white">{currency}{item.value.toFixed(0)}</span>
+                            </div>
+                        ))}
+                        {categoryStats.data.length > 5 && (
+                            <div className="text-xs text-center text-teal-600 dark:text-teal-400 pt-1">
+                                + {categoryStats.data.length - 5} more
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
       </div>
 
       {/* Recent Transactions Snippet */}
