@@ -44,9 +44,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       initialDate?: Date;
   }>({ isOpen: false, mode: 'start' });
 
-  // Chart specific view dates (navigation cursors)
-  const [viewDate, setViewDate] = useState(new Date());
-  const [categoryViewDate, setCategoryViewDate] = useState(new Date());
+  // Decoupled Date Views
+  const [trendDate, setTrendDate] = useState(new Date());
+  const [categoryDate, setCategoryDate] = useState(new Date());
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   
@@ -75,10 +75,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
     loadInsight();
   }, [expenses.length, incomes.length, budgets, currency, userName]); 
 
-  // Reset viewDates when global timeRange changes
+  // Reset dates when global timeRange changes
   useEffect(() => {
-    setViewDate(new Date());
-    setCategoryViewDate(new Date());
+    const now = new Date();
+    setTrendDate(now);
+    setCategoryDate(now);
   }, [timeRange]);
 
   // Handle clicking outside the overlay to close it
@@ -94,39 +95,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
     };
   }, [activeCategory]);
 
-  const calculateDateNavigate = (currentDate: Date, range: TimeRange, direction: number) => {
-    const d = new Date(currentDate);
-    switch (range) {
-        case 'Daily': 
-            d.setDate(d.getDate() + (direction * 7)); // Trend chart moves 7 days
-            break;
-        case 'Weekly': 
-            d.setDate(d.getDate() + (direction * 7 * 8)); 
-            break;
-        case 'Monthly': 
-            d.setMonth(d.getMonth() + (direction * 6)); 
-            break;
-        case 'Quarterly': 
-            d.setMonth(d.getMonth() + (direction * 3 * 4)); 
-            break;
-        case 'Half-Yearly':
-             d.setMonth(d.getMonth() + (direction * 6 * 4)); 
-             break;
-        case 'Yearly': 
-             d.setFullYear(d.getFullYear() + (direction * 5)); 
-             break;
-        case 'Custom':
-             // No navigation for custom range
-             break;
-        default:
-             break;
-    }
-    return d;
-  };
-
-  const calculateCategoryDateNavigate = (currentDate: Date, range: TimeRange, direction: number) => {
-      const d = new Date(currentDate);
-      switch (range) {
+  const getNewDate = (baseDate: Date, direction: number) => {
+      const d = new Date(baseDate);
+      switch (timeRange) {
           case 'Daily': 
               d.setDate(d.getDate() + direction);
               break;
@@ -146,20 +117,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
                d.setFullYear(d.getFullYear() + direction);
                break;
           case 'Custom':
+               // No navigation for custom range
                break;
           default:
                break;
       }
       return d;
-  }
+  };
 
-  const handleChartNavigate = (direction: number) => {
-    setViewDate(calculateDateNavigate(viewDate, timeRange, direction));
+  const handleTrendNavigate = (direction: number) => {
+      if (timeRange === 'Custom') return;
+      setTrendDate(prev => getNewDate(prev, direction));
   };
 
   const handleCategoryNavigate = (direction: number) => {
-      setCategoryViewDate(calculateCategoryDateNavigate(categoryViewDate, timeRange, direction));
-  }
+      if (timeRange === 'Custom') return;
+      setCategoryDate(prev => getNewDate(prev, direction));
+  };
 
   // --- Date Picker Logic ---
   const openDatePicker = (mode: 'start' | 'end') => {
@@ -187,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
     }
   };
 
-  // --- Swipe Logic ---
+  // --- Swipe Logic for Trend Graph ---
   const onTouchStart = (e: React.TouchEvent) => {
       setTouchEnd(null);
       setTouchStart(e.targetTouches[0].clientX);
@@ -204,9 +178,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       const isRightSwipe = distance < -50;
       
       if (timeRange !== 'Custom') {
-        if (isLeftSwipe) handleChartNavigate(1);
-        if (isRightSwipe) handleChartNavigate(-1);
+        if (isLeftSwipe) handleTrendNavigate(1);
+        if (isRightSwipe) handleTrendNavigate(-1);
       }
+  };
+
+  // Helper to get week number
+  const getWeekNumber = (d: Date) => {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   };
 
   // Reusable Helper Functions for Keys
@@ -215,88 +197,98 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       const now = new Date(referenceDate);
 
       if (range === 'Daily') {
+        // Last 7 days including today
         for (let i = 6; i >= 0; i--) {
           const d = new Date(now);
           d.setDate(d.getDate() - i);
-          keys.push({
-            key: d.toISOString().split('T')[0],
-            label: d.toLocaleDateString('en-US', { weekday: 'short' }),
-            start: new Date(d.setHours(0,0,0,0)),
-            end: new Date(d.setHours(23,59,59,999))
-          });
+          const label = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+          
+          const start = new Date(d); start.setHours(0,0,0,0);
+          const end = new Date(d); end.setHours(23,59,59,999);
+          
+          keys.push({ key: d.toISOString().split('T')[0], label, start, end });
         }
       } else if (range === 'Weekly') {
-        const currentMonday = new Date(now);
-        const day = currentMonday.getDay() || 7;
-        currentMonday.setDate(currentMonday.getDate() - day + 1);
+        // Last 4 weeks
+        const currentWeekStart = new Date(now);
+        const day = currentWeekStart.getDay() || 7;
+        currentWeekStart.setDate(currentWeekStart.getDate() - day + 1);
 
-        for (let i = 7; i >= 0; i--) {
-          const d = new Date(currentMonday);
-          d.setDate(d.getDate() - (i * 7));
-          const endOfWeek = new Date(d);
-          endOfWeek.setDate(d.getDate() + 6);
+        for (let i = 3; i >= 0; i--) {
+          const wStart = new Date(currentWeekStart);
+          wStart.setDate(wStart.getDate() - (i * 7));
+          const wEnd = new Date(wStart);
+          wEnd.setDate(wStart.getDate() + 6);
+          
+          const weekNum = getWeekNumber(wStart);
+          const label = `wk${weekNum}`;
+
           keys.push({
-            key: d.toISOString().split('T')[0], // key is start of week
-            label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            start: new Date(d.setHours(0,0,0,0)),
-            end: new Date(endOfWeek.setHours(23,59,59,999))
+            key: `${wStart.getFullYear()}-W${weekNum}`,
+            label,
+            start: new Date(wStart.setHours(0,0,0,0)),
+            end: new Date(wEnd.setHours(23,59,59,999))
           });
         }
       } else if (range === 'Monthly') {
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-          keys.push({
-            key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-            label: d.toLocaleDateString('en-US', { month: 'short' }),
-            start: new Date(d.setHours(0,0,0,0)),
-            end: new Date(endOfMonth.setHours(23,59,59,999))
-          });
+        // Days of the month
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 1; i <= daysInMonth; i++) {
+          const d = new Date(year, month, i);
+          const label = i.toString(); 
+          
+          const start = new Date(d); start.setHours(0,0,0,0);
+          const end = new Date(d); end.setHours(23,59,59,999);
+          
+          keys.push({ key: d.toISOString().split('T')[0], label, start, end });
         }
       } else if (range === 'Quarterly') {
-        for (let i = 3; i >= 0; i--) {
-           const d = new Date(now.getFullYear(), now.getMonth() - (i * 3), 1);
-           const q = Math.floor(d.getMonth() / 3) + 1;
-           const year = d.getFullYear().toString().slice(-2);
-           
-           const qStartMonth = (q - 1) * 3;
-           const startOfQuarter = new Date(d.getFullYear(), qStartMonth, 1);
-           const endOfQuarter = new Date(d.getFullYear(), qStartMonth + 3, 0);
+        // 3 months of the quarter
+        const q = Math.floor(now.getMonth() / 3);
+        const startMonth = q * 3;
+        
+        for (let i = 0; i < 3; i++) {
+           const m = startMonth + i;
+           const d = new Date(now.getFullYear(), m, 1);
+           const endOfM = new Date(now.getFullYear(), m + 1, 0);
 
            keys.push({
-             key: `${d.getFullYear()}-Q${q}`,
-             label: `Q${q} '${year}`,
-             start: new Date(startOfQuarter.setHours(0,0,0,0)),
-             end: new Date(endOfQuarter.setHours(23,59,59,999))
+             key: `${d.getFullYear()}-${String(m + 1).padStart(2, '0')}`,
+             label: d.toLocaleDateString('en-US', { month: 'short' }),
+             start: new Date(d.setHours(0,0,0,0)),
+             end: new Date(endOfM.setHours(23,59,59,999))
            });
         }
       } else if (range === 'Half-Yearly') {
-        for (let i = 3; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - (i * 6), 1);
-            const h = d.getMonth() < 6 ? 1 : 2;
-            const year = d.getFullYear().toString().slice(-2);
-            
-            const hStartMonth = h === 1 ? 0 : 6;
-            const startOfHalf = new Date(d.getFullYear(), hStartMonth, 1);
-            const endOfHalf = new Date(d.getFullYear(), hStartMonth + 6, 0);
+        // 6 months of current half-year
+        const h = now.getMonth() < 6 ? 0 : 6;
+        
+        for (let i = 0; i < 6; i++) {
+            const m = h + i;
+            const d = new Date(now.getFullYear(), m, 1);
+            const endOfM = new Date(now.getFullYear(), m + 1, 0);
 
             keys.push({
-                key: `${d.getFullYear()}-H${h}`,
-                label: `H${h} '${year}`,
-                start: new Date(startOfHalf.setHours(0,0,0,0)),
-                end: new Date(endOfHalf.setHours(23,59,59,999))
+                key: `${d.getFullYear()}-${String(m + 1).padStart(2, '0')}`,
+                label: d.toLocaleDateString('en-US', { month: 'short' }),
+                start: new Date(d.setHours(0,0,0,0)),
+                end: new Date(endOfM.setHours(23,59,59,999))
             });
         }
       } else if (range === 'Yearly') {
-        for (let i = 4; i >= 0; i--) {
-          const y = now.getFullYear() - i;
-          const startOfYear = new Date(y, 0, 1);
-          const endOfYear = new Date(y, 11, 31);
+        // 12 months of current year
+        const year = now.getFullYear();
+        for (let i = 0; i < 12; i++) {
+          const d = new Date(year, i, 1);
+          const endOfM = new Date(year, i + 1, 0);
           keys.push({
-            key: y.toString(),
-            label: y.toString(),
-            start: new Date(startOfYear.setHours(0,0,0,0)),
-            end: new Date(endOfYear.setHours(23,59,59,999))
+            key: `${year}-${String(i + 1).padStart(2, '0')}`,
+            label: d.toLocaleDateString('en-US', { month: 'short' }),
+            start: new Date(d.setHours(0,0,0,0)),
+            end: new Date(endOfM.setHours(23,59,59,999))
           });
         }
       } else if (range === 'Custom') {
@@ -308,9 +300,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
              
              if (diffDays <= 31) {
                  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+                     const label = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
                      keys.push({
                          key: d.toISOString().split('T')[0],
-                         label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                         label,
                          start: new Date(d.setHours(0,0,0,0)),
                          end: new Date(d.setHours(23,59,59,999))
                      });
@@ -329,7 +322,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
   };
 
   const chartData = useMemo(() => {
-      const keys = generateKeys(timeRange, viewDate);
+      const keys = generateKeys(timeRange, trendDate);
       
       const data = keys.map(k => {
           let amount = 0;
@@ -348,7 +341,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
           };
       });
       return data;
-  }, [expenses, timeRange, viewDate, customStart, customEnd]);
+  }, [expenses, timeRange, trendDate, customStart, customEnd]);
 
   const getCategoryRangeBounds = (range: TimeRange, date: Date) => {
       let start = new Date(date);
@@ -402,7 +395,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
   }
 
   const categoryStats = useMemo(() => {
-    const { start, end, label } = getCategoryRangeBounds(timeRange, categoryViewDate);
+    const { start, end, label } = getCategoryRangeBounds(timeRange, categoryDate);
     
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
          return { data: [], total: 0, label };
@@ -426,10 +419,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
         .sort((a, b) => b.value - a.value);
 
     return { data, total, label };
-  }, [expenses, timeRange, categoryViewDate, customStart, customEnd]);
+  }, [expenses, timeRange, categoryDate, customStart, customEnd]);
 
+  // View Stats synced with Trend Date (Primary View)
   const currentViewStats = useMemo(() => {
-      const { start, end } = getCategoryRangeBounds(timeRange, viewDate);
+      const { start, end } = getCategoryRangeBounds(timeRange, trendDate);
       
       const periodExpense = expenses
           .filter(e => {
@@ -453,7 +447,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
 
       return { periodExpense, periodIncome, todayExpense };
 
-  }, [expenses, incomes, timeRange, viewDate, customStart, customEnd]);
+  }, [expenses, incomes, timeRange, trendDate, customStart, customEnd]);
 
   const recentExpenses = useMemo(() => {
       return [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
@@ -647,9 +641,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
                 </div>
                 {timeRange !== 'Custom' && (
                     <div className="flex justify-between items-center mt-2 px-2 text-xs text-gray-400 dark:text-slate-500">
-                        <button onClick={() => handleChartNavigate(-1)}><ChevronLeft size={16} /></button>
+                        <button onClick={() => handleTrendNavigate(-1)}><ChevronLeft size={16} /></button>
                         <span>Swipe to navigate</span>
-                        <button onClick={() => handleChartNavigate(1)}><ChevronRight size={16} /></button>
+                        <button onClick={() => handleTrendNavigate(1)}><ChevronRight size={16} /></button>
                     </div>
                 )}
             </div>
