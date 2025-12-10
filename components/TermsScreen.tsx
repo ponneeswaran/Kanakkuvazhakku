@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowLeft, ShieldCheck, Server, Lock } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
@@ -77,7 +78,7 @@ const TermsScreen: React.FC<TermsScreenProps> = ({ onBack }) => {
 
          <div className="pt-8 text-center border-t border-gray-100 dark:border-slate-800 mt-8">
             <p className="text-xs text-gray-400">Last updated: {new Date().toLocaleDateString()}</p>
-            <p className="text-xs text-gray-400 mt-1">Version 1.2.8</p>
+            <p className="text-xs text-gray-400 mt-1">Version 1.3.0</p>
          </div>
       </div>
     </div>

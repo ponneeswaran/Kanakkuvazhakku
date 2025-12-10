@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useData } from '../contexts/DataContext';
 import { ArrowLeft, Moon, Sun, ChevronDown } from 'lucide-react';
@@ -99,7 +100,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
       </section>
 
       <div className="mt-auto pt-8 text-center text-xs text-gray-400 dark:text-gray-600">
-        <p>Kanakkuvazhakku v1.2.8</p>
+        <p>Kanakkuvazhakku v1.3.0</p>
       </div>
     </div>
   );

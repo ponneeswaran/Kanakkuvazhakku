@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Wallet } from 'lucide-react';
 
@@ -58,7 +59,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
       {/* Version Number */}
       <div className="absolute bottom-6 z-10 text-[10px] text-teal-100/50 font-medium tracking-widest">
-        v1.2.8
+        v1.3.0
       </div>
     </div>
   );
