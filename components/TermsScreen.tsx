@@ -12,15 +12,17 @@ const TermsScreen: React.FC<TermsScreenProps> = ({ onBack }) => {
   
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 flex flex-col animate-fade-in transition-colors">
-      <header className="flex items-center space-x-3 p-4 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 border-b border-gray-100 dark:border-slate-800">
-        <button 
-          onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">{t('Terms of Service')}</h1>
-      </header>
+      <div className="shrink-0 p-4 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10 border-b border-gray-100 dark:border-slate-800">
+        <header className="flex items-center space-x-3">
+            <button 
+            onClick={onBack}
+            className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300 transition-colors"
+            >
+            <ArrowLeft size={24} />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white">{t('Terms of Service')}</h1>
+        </header>
+      </div>
       
       <div className="flex-1 overflow-y-auto p-6 space-y-8 text-gray-600 dark:text-slate-300">
          <section>

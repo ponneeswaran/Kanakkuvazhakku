@@ -259,7 +259,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
            const q = Math.floor(d.getMonth() / 3) + 1;
            const year = d.getFullYear().toString().slice(-2);
            
-           // Quarter start month index: 0, 3, 6, 9
            const qStartMonth = (q - 1) * 3;
            const startOfQuarter = new Date(d.getFullYear(), qStartMonth, 1);
            const endOfQuarter = new Date(d.getFullYear(), qStartMonth + 3, 0);
@@ -304,12 +303,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
           if (customStart && customEnd) {
              const s = new Date(customStart);
              const e = new Date(customEnd);
-             // Limit to 30 points to prevent chart overcrowding if range is huge
              const diffTime = Math.abs(e.getTime() - s.getTime());
              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
              
              if (diffDays <= 31) {
-                 // Daily breakdown
                  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
                      keys.push({
                          key: d.toISOString().split('T')[0],
@@ -340,7 +337,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
               amount = expenses
                 .filter(e => {
                     const eDate = new Date(e.date);
-                    // Use start and end of day logic
                     return eDate >= k.start! && eDate <= k.end!;
                 })
                 .reduce((sum, e) => sum + e.amount, 0);
@@ -354,7 +350,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       return data;
   }, [expenses, timeRange, viewDate, customStart, customEnd]);
 
-  // Helper to get range bounds for single view
   const getCategoryRangeBounds = (range: TimeRange, date: Date) => {
       let start = new Date(date);
       let end = new Date(date);
@@ -399,7 +394,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
               end.setHours(23,59,59,999);
               label = 'Custom Range';
           } else {
-              // Invalid/Incomplete
               return { start: new Date(0), end: new Date(0), label: 'Select Range' };
           }
       }
@@ -410,7 +404,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
   const categoryStats = useMemo(() => {
     const { start, end, label } = getCategoryRangeBounds(timeRange, categoryViewDate);
     
-    // Safety check for invalid dates
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
          return { data: [], total: 0, label };
     }
@@ -435,7 +428,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
     return { data, total, label };
   }, [expenses, timeRange, categoryViewDate, customStart, customEnd]);
 
-  // Card Calculations for current view
   const currentViewStats = useMemo(() => {
       const { start, end } = getCategoryRangeBounds(timeRange, viewDate);
       
@@ -463,16 +455,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
 
   }, [expenses, incomes, timeRange, viewDate, customStart, customEnd]);
 
-
-  // Recent expenses for the list (Limit to 5)
   const recentExpenses = useMemo(() => {
       return [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
   }, [expenses]);
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in min-h-full">
-      {/* Header */}
-      <header className="mb-4">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors animate-fade-in">
+      {/* Fixed Header */}
+      <div className="shrink-0 p-6 pb-2 z-10 bg-gray-50 dark:bg-slate-900 transition-colors">
         <div className="flex justify-between items-start mb-2">
             <div>
               <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Ledger Summary')}</h1>
@@ -487,297 +477,300 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
                )}
             </button>
         </div>
-      </header>
-
-      {/* Insight Card */}
-      <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Sparkles size={100} />
-        </div>
-        <div className="relative z-10">
-            <div className="flex items-center space-x-2 mb-2">
-                <Sparkles size={18} className="text-yellow-300" />
-                <h3 className="font-bold text-sm uppercase tracking-wide opacity-90">{t('AI Assistant Insight')}</h3>
-            </div>
-            <p className="text-lg font-medium leading-relaxed">
-                {isLoadingInsight ? (
-                    <span className="flex items-center space-x-2">
-                        <span className="animate-pulse">{t('Analyzing your finances...')}</span>
-                    </span>
-                ) : (
-                    insight || t('Keep tracking your expenses to see insights!')
-                )}
-            </p>
-        </div>
       </div>
 
-      {/* Time Frame Selection */}
-      <div className="flex flex-col gap-2 relative">
-          <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700">
-              <span className="text-sm font-semibold text-gray-700 dark:text-slate-300 whitespace-nowrap mr-2">{t('Ledger time frame:')}</span>
-              <div className="relative w-1/2">
-                  <select 
-                      value={timeRange}
-                      onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                      className="w-full bg-gray-100 dark:bg-slate-700 border border-transparent hover:border-gray-300 dark:hover:border-slate-500 rounded-lg text-xs font-semibold py-1.5 px-2 pr-6 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 dark:text-white cursor-pointer transition-all"
-                  >
-                      <option value="Daily">{t('Daily')}</option>
-                      <option value="Weekly">{t('Weekly')}</option>
-                      <option value="Monthly">{t('Monthly')}</option>
-                      <option value="Quarterly">{t('Quarterly')}</option>
-                      <option value="Half-Yearly">{t('Half-Yearly')}</option>
-                      <option value="Yearly">{t('Yearly')}</option>
-                      <option value="Custom">{t('Custom')}</option>
-                  </select>
-                  <ChevronDown size={12} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
-              </div>
-          </div>
-
-          {/* Custom Range Picker */}
-          {timeRange === 'Custom' && (
-              <div className="flex space-x-2 bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in">
-                    {/* Start Date Button */}
-                    <button 
-                        onClick={() => openDatePicker('start')}
-                        className={`w-1/2 flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600`}
-                    >
-                        <span className={customStart ? "text-gray-900 dark:text-white" : "text-gray-400"}>
-                            {customStart ? new Date(customStart).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "Start Date"}
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+        {/* Insight Card */}
+        <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Sparkles size={100} />
+            </div>
+            <div className="relative z-10">
+                <div className="flex items-center space-x-2 mb-2">
+                    <Sparkles size={18} className="text-yellow-300" />
+                    <h3 className="font-bold text-sm uppercase tracking-wide opacity-90">{t('AI Assistant Insight')}</h3>
+                </div>
+                <p className="text-lg font-medium leading-relaxed">
+                    {isLoadingInsight ? (
+                        <span className="flex items-center space-x-2">
+                            <span className="animate-pulse">{t('Analyzing your finances...')}</span>
                         </span>
-                        <Calendar size={14} className="text-gray-400" />
-                    </button>
+                    ) : (
+                        insight || t('Keep tracking your expenses to see insights!')
+                    )}
+                </p>
+            </div>
+        </div>
 
-                    {/* End Date Button */}
-                    <button 
-                        onClick={() => openDatePicker('end')}
-                        className={`w-1/2 flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600`}
+        {/* Time Frame Selection */}
+        <div className="flex flex-col gap-2 relative">
+            <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700">
+                <span className="text-sm font-semibold text-gray-700 dark:text-slate-300 whitespace-nowrap mr-2">{t('Ledger time frame:')}</span>
+                <div className="relative w-1/2">
+                    <select 
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                        className="w-full bg-gray-100 dark:bg-slate-700 border border-transparent hover:border-gray-300 dark:hover:border-slate-500 rounded-lg text-xs font-semibold py-1.5 px-2 pr-6 appearance-none focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 dark:text-white cursor-pointer transition-all"
                     >
-                        <span className={customEnd ? "text-gray-900 dark:text-white" : "text-gray-400"}>
-                            {customEnd ? new Date(customEnd).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "End Date"}
-                        </span>
-                        <Calendar size={14} className="text-gray-400" />
-                    </button>
-              </div>
-          )}
-      </div>
-
-      <DatePicker 
-          isOpen={datePickerConfig.isOpen}
-          onClose={() => setDatePickerConfig(prev => ({ ...prev, isOpen: false }))}
-          onSelect={handleDateSelect}
-          initialDate={datePickerConfig.initialDate}
-          title={datePickerConfig.mode === 'start' ? 'Start Date' : 'End Date'}
-      />
-
-      {/* Income & Expense Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Income Card */}
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-teal-100 dark:border-slate-700">
-               <div className="flex items-center space-x-2 mb-3">
-                   <div className="bg-teal-50 dark:bg-teal-900/30 p-2 rounded-full text-teal-600 dark:text-teal-400">
-                        <ArrowDownCircle size={20} />
-                   </div>
-                   <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Income')}</h3>
-               </div>
-               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                   {currency}{currentViewStats.periodIncome.toFixed(0)}
-               </div>
-               <p className="text-[10px] text-gray-400 mt-1">{t('Total for Period')}</p>
-          </div>
-
-          {/* Expense Card */}
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-100 dark:border-slate-700 lg:col-span-3">
-               <div className="flex items-center space-x-2 mb-3">
-                   <div className="bg-red-50 dark:bg-red-900/30 p-2 rounded-full text-red-600 dark:text-red-400">
-                        <ArrowUpCircle size={20} />
-                   </div>
-                   <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Expense')}</h3>
-               </div>
-               
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                   <div>
-                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                           {currency}{currentViewStats.periodExpense.toFixed(0)}
-                       </div>
-                       <p className="text-[10px] text-gray-400">{t('Total for Period')}</p>
-                   </div>
-                   <div className="pt-2 sm:pt-0 sm:border-l border-t sm:border-t-0 border-gray-100 dark:border-slate-700 sm:pl-4">
-                       <div className="text-lg font-semibold text-gray-800 dark:text-slate-200">
-                           {currency}{currentViewStats.todayExpense.toFixed(0)}
-                       </div>
-                       <p className="text-[10px] text-gray-400">{t('Today')}</p>
-                   </div>
-               </div>
-          </div>
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Spending Trends Chart */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-                    <TrendingUp size={18} className="mr-2 text-teal-500" />
-                    {t('Spending Trends')}
-                </h3>
+                        <option value="Daily">{t('Daily')}</option>
+                        <option value="Weekly">{t('Weekly')}</option>
+                        <option value="Monthly">{t('Monthly')}</option>
+                        <option value="Quarterly">{t('Quarterly')}</option>
+                        <option value="Half-Yearly">{t('Half-Yearly')}</option>
+                        <option value="Yearly">{t('Yearly')}</option>
+                        <option value="Custom">{t('Custom')}</option>
+                    </select>
+                    <ChevronDown size={12} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
             </div>
 
-            <div 
-                className="h-64 w-full select-none"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-            >
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                        <defs>
-                            <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                        <XAxis 
-                            dataKey="name" 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{fontSize: 10, fill: '#94A3B8'}} 
-                            interval="preserveStartEnd"
-                        />
-                        <YAxis hide />
-                        <RechartsTooltip 
-                            formatter={(value) => [`${currency}${value}`, 'Spent']}
-                            contentStyle={{ backgroundColor: theme === 'dark' ? '#1E293B' : '#FFF', borderColor: theme === 'dark' ? '#334155' : '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: theme === 'dark' ? '#FFF' : '#000' }}
-                            itemStyle={{ color: theme === 'dark' ? '#FFF' : '#000' }}
-                        />
-                        <Area type="monotone" dataKey="amount" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </div>
-            {timeRange !== 'Custom' && (
-                <div className="flex justify-between items-center mt-2 px-2 text-xs text-gray-400 dark:text-slate-500">
-                    <button onClick={() => handleChartNavigate(-1)}><ChevronLeft size={16} /></button>
-                    <span>Swipe to navigate</span>
-                    <button onClick={() => handleChartNavigate(1)}><ChevronRight size={16} /></button>
+            {/* Custom Range Picker */}
+            {timeRange === 'Custom' && (
+                <div className="flex space-x-2 bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 animate-fade-in">
+                        <button 
+                            onClick={() => openDatePicker('start')}
+                            className={`w-1/2 flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600`}
+                        >
+                            <span className={customStart ? "text-gray-900 dark:text-white" : "text-gray-400"}>
+                                {customStart ? new Date(customStart).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "Start Date"}
+                            </span>
+                            <Calendar size={14} className="text-gray-400" />
+                        </button>
+
+                        <button 
+                            onClick={() => openDatePicker('end')}
+                            className={`w-1/2 flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-colors border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600`}
+                        >
+                            <span className={customEnd ? "text-gray-900 dark:text-white" : "text-gray-400"}>
+                                {customEnd ? new Date(customEnd).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : "End Date"}
+                            </span>
+                            <Calendar size={14} className="text-gray-400" />
+                        </button>
                 </div>
             )}
         </div>
 
-        {/* Category Breakdown */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700">
-            <div className="flex flex-col mb-4">
-                <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
-                        <PieChartIcon size={18} className="mr-2 text-teal-500" />
-                        {t('Category Breakdown')}
-                    </h3>
+        <DatePicker 
+            isOpen={datePickerConfig.isOpen}
+            onClose={() => setDatePickerConfig(prev => ({ ...prev, isOpen: false }))}
+            onSelect={handleDateSelect}
+            initialDate={datePickerConfig.initialDate}
+            title={datePickerConfig.mode === 'start' ? 'Start Date' : 'End Date'}
+        />
+
+        {/* Income & Expense Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-teal-100 dark:border-slate-700">
+                <div className="flex items-center space-x-2 mb-3">
+                    <div className="bg-teal-50 dark:bg-teal-900/30 p-2 rounded-full text-teal-600 dark:text-teal-400">
+                            <ArrowDownCircle size={20} />
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Income')}</h3>
+                </div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {currency}{currentViewStats.periodIncome.toFixed(0)}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">{t('Total for Period')}</p>
+            </div>
+
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-red-100 dark:border-slate-700 lg:col-span-3">
+                <div className="flex items-center space-x-2 mb-3">
+                    <div className="bg-red-50 dark:bg-red-900/30 p-2 rounded-full text-red-600 dark:text-red-400">
+                            <ArrowUpCircle size={20} />
+                    </div>
+                    <h3 className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">{t('Expense')}</h3>
                 </div>
                 
-                {/* Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {currency}{currentViewStats.periodExpense.toFixed(0)}
+                        </div>
+                        <p className="text-[10px] text-gray-400">{t('Total for Period')}</p>
+                    </div>
+                    <div className="pt-2 sm:pt-0 sm:border-l border-t sm:border-t-0 border-gray-100 dark:border-slate-700 sm:pl-4">
+                        <div className="text-lg font-semibold text-gray-800 dark:text-slate-200">
+                            {currency}{currentViewStats.todayExpense.toFixed(0)}
+                        </div>
+                        <p className="text-[10px] text-gray-400">{t('Today')}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+            {/* Spending Trends Chart */}
+            <div 
+            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700"
+            style={{ backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff' }}
+            >
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                        <TrendingUp size={18} className="mr-2 text-teal-500" />
+                        {t('Spending Trends')}
+                    </h3>
+                </div>
+
+                <div 
+                    className="h-64 w-full select-none"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                >
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                            <defs>
+                                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#14B8A6" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                            <XAxis 
+                                dataKey="name" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{fontSize: 10, fill: '#94A3B8'}} 
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis hide />
+                            <RechartsTooltip 
+                                formatter={(value) => [`${currency}${value}`, 'Spent']}
+                                contentStyle={{ backgroundColor: theme === 'dark' ? '#1E293B' : '#FFF', borderColor: theme === 'dark' ? '#334155' : '#E2E8F0', borderRadius: '8px', fontSize: '12px', color: theme === 'dark' ? '#FFF' : '#000' }}
+                                itemStyle={{ color: theme === 'dark' ? '#FFF' : '#000' }}
+                            />
+                            <Area type="monotone" dataKey="amount" stroke="#0D9488" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
                 {timeRange !== 'Custom' && (
-                    <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-slate-700/50 p-2 rounded-lg">
-                            <button onClick={() => handleCategoryNavigate(-1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
-                                <ChevronLeft size={16} />
-                            </button>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">{categoryStats.label}</span>
-                            <button onClick={() => handleCategoryNavigate(1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
-                                <ChevronRight size={16} />
-                            </button>
+                    <div className="flex justify-between items-center mt-2 px-2 text-xs text-gray-400 dark:text-slate-500">
+                        <button onClick={() => handleChartNavigate(-1)}><ChevronLeft size={16} /></button>
+                        <span>Swipe to navigate</span>
+                        <button onClick={() => handleChartNavigate(1)}><ChevronRight size={16} /></button>
                     </div>
                 )}
             </div>
 
-            {categoryStats.total === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 opacity-70 h-64">
-                    <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-2">
-                        <PieChartIcon size={24} className="text-gray-400 dark:text-slate-500" />
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-slate-400">{t('No expenses found for this period')}</p>
-                </div>
-            ) : (
-                <div className="flex flex-col sm:flex-row items-center animate-fade-in h-64">
-                    <div className="h-full w-full sm:w-1/2 relative mb-4 sm:mb-0 sm:mr-6">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={categoryStats.data}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={90}
-                                    paddingAngle={2}
-                                    dataKey="value"
-                                >
-                                    {categoryStats.data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={CATEGORY_COLOR_MAP[entry.name] || COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                            </PieChart>
-                        </ResponsiveContainer>
-                        {/* Center Label */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
-                            <span className="text-[10px] text-gray-400 dark:text-slate-500 uppercase">{t('Total')}</span>
-                            <span className="text-xs font-bold text-gray-800 dark:text-white">{currency}{categoryStats.total.toFixed(0)}</span>
-                        </div>
+            {/* Category Breakdown */}
+            <div 
+            className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-50 dark:border-slate-700"
+            style={{ backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff' }}
+            >
+                <div className="flex flex-col mb-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center">
+                            <PieChartIcon size={18} className="mr-2 text-teal-500" />
+                            {t('Category Breakdown')}
+                        </h3>
                     </div>
                     
-                    <div className="flex-1 w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full">
-                        {categoryStats.data.slice(0, 5).map((item, index) => (
-                            <div key={item.name} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLOR_MAP[item.name] || COLORS[index % COLORS.length] }}></div>
-                                    <span className="text-gray-700 dark:text-slate-300">{t(item.name)}</span>
-                                </div>
-                                <span className="font-medium text-gray-800 dark:text-white">{currency}{item.value.toFixed(0)}</span>
-                            </div>
-                        ))}
-                        {categoryStats.data.length > 5 && (
-                            <div className="text-xs text-center text-teal-600 dark:text-teal-400 pt-1">
-                                + {categoryStats.data.length - 5} more
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-        </div>
-      </div>
-
-      {/* Recent Transactions Snippet */}
-      <div>
-         <div className="flex justify-between items-center mb-2 px-1">
-            <h3 className="font-bold text-gray-800 dark:text-white">{t('Recent')}</h3>
-            <button onClick={() => onNavigateToHistory('All')} className="text-teal-600 dark:text-teal-400 text-sm font-medium">
-                {t('See All')}
-            </button>
-         </div>
-         <div className="space-y-3">
-             {recentExpenses.length === 0 ? (
-                 <div className="text-center py-6 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
-                     <p className="text-sm text-gray-400 dark:text-slate-500">{t('No expenses yet')}</p>
-                 </div>
-             ) : (
-                recentExpenses.map(expense => (
-                    <div key={expense.id} className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
-                                ${expense.category === 'Food' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 
-                                  expense.category === 'Transport' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
-                                  'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-400'}
-                             `}>
-                                {expense.category[0]}
-                             </div>
-                             <div>
-                                 <div className="font-medium text-sm text-gray-800 dark:text-white truncate max-w-[150px]">{expense.description}</div>
-                                 <div className="text-xs text-gray-400 dark:text-slate-500">
-                                     {new Date(expense.date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
-                                 </div>
-                             </div>
+                    {timeRange !== 'Custom' && (
+                        <div className="flex items-center justify-between mt-3 bg-gray-50 dark:bg-slate-700/50 p-2 rounded-lg">
+                                <button onClick={() => handleCategoryNavigate(-1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">{categoryStats.label}</span>
+                                <button onClick={() => handleCategoryNavigate(1)} className="p-1 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-full transition-colors text-gray-500 dark:text-slate-400">
+                                    <ChevronRight size={16} />
+                                </button>
                         </div>
-                        <span className="font-bold text-gray-800 dark:text-white text-sm">{currency}{expense.amount.toFixed(2)}</span>
+                    )}
+                </div>
+
+                {categoryStats.total === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 opacity-70 h-64">
+                        <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-2">
+                            <PieChartIcon size={24} className="text-gray-400 dark:text-slate-500" />
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">{t('No expenses found for this period')}</p>
                     </div>
-                ))
-             )}
-         </div>
+                ) : (
+                    <div className="flex flex-col sm:flex-row items-center animate-fade-in h-64">
+                        <div className="h-full w-full sm:w-1/2 relative mb-4 sm:mb-0 sm:mr-6">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={categoryStats.data}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={90}
+                                        paddingAngle={2}
+                                        dataKey="value"
+                                    >
+                                        {categoryStats.data.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={CATEGORY_COLOR_MAP[entry.name] || COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
+                                <span className="text-[10px] text-gray-400 dark:text-slate-500 uppercase">{t('Total')}</span>
+                                <span className="text-xs font-bold text-gray-800 dark:text-white">{currency}{categoryStats.total.toFixed(0)}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full">
+                            {categoryStats.data.slice(0, 5).map((item, index) => (
+                                <div key={item.name} className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLOR_MAP[item.name] || COLORS[index % COLORS.length] }}></div>
+                                        <span className="text-gray-700 dark:text-slate-300">{t(item.name)}</span>
+                                    </div>
+                                    <span className="font-medium text-gray-800 dark:text-white">{currency}{item.value.toFixed(0)}</span>
+                                </div>
+                            ))}
+                            {categoryStats.data.length > 5 && (
+                                <div className="text-xs text-center text-teal-600 dark:text-teal-400 pt-1">
+                                    + {categoryStats.data.length - 5} more
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* Recent Transactions Snippet */}
+        <div className="pb-6">
+            <div className="flex justify-between items-center mb-2 px-1">
+                <h3 className="font-bold text-gray-800 dark:text-white">{t('Recent')}</h3>
+                <button onClick={() => onNavigateToHistory('All')} className="text-teal-600 dark:text-teal-400 text-sm font-medium">
+                    {t('See All')}
+                </button>
+            </div>
+            <div className="space-y-3">
+                {recentExpenses.length === 0 ? (
+                    <div className="text-center py-6 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-200 dark:border-slate-700">
+                        <p className="text-sm text-gray-400 dark:text-slate-500">{t('No expenses yet')}</p>
+                    </div>
+                ) : (
+                    recentExpenses.map(expense => (
+                        <div key={expense.id} className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700 flex justify-between items-center">
+                            <div className="flex items-center space-x-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm
+                                    ${expense.category === 'Food' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' : 
+                                    expense.category === 'Transport' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                                    'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-400'}
+                                `}>
+                                    {expense.category[0]}
+                                </div>
+                                <div>
+                                    <div className="font-medium text-sm text-gray-800 dark:text-white truncate max-w-[150px]">{expense.description}</div>
+                                    <div className="text-xs text-gray-400 dark:text-slate-500">
+                                        {new Date(expense.date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="font-bold text-gray-800 dark:text-white text-sm">{currency}{expense.amount.toFixed(2)}</span>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
       </div>
     </div>
   );

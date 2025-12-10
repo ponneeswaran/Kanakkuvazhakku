@@ -118,55 +118,59 @@ const IncomeScreen: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-900 min-h-screen transition-colors">
-      <header className="flex justify-between items-center mb-2 sticky top-0 z-10 bg-slate-50 dark:bg-slate-950 py-2">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Income')}</h1>
-      </header>
+    <div className="h-full flex flex-col animate-fade-in bg-slate-50 dark:bg-slate-900 transition-colors">
+      <div className="shrink-0 p-6 pb-2 z-10 bg-slate-50 dark:bg-slate-900 transition-colors">
+        <header className="flex justify-between items-center mb-2">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('Income')}</h1>
+        </header>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Overdue Section */}
-            {overdueIncomes.length > 0 && (
-                <div className="space-y-2 col-span-full">
-                    <h2 className="text-xs font-bold text-red-500 uppercase tracking-wide ml-1 flex items-center">
-                        <AlertTriangle size={12} className="mr-1" /> {t('Action Required')}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {overdueIncomes.map(inc => (
-                            <IncomeCard 
-                                key={inc.id} 
-                                income={inc} 
-                                currency={currency} 
-                                t={t} 
-                                onFollowUp={setFollowUpItem}
-                                onMarkReceived={markIncomeReceived}
-                                onDelete={deleteIncome}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-            
-            {/* Upcoming Section */}
-            <div className="space-y-2 col-span-full">
-                <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide ml-1">{t('Upcoming')}</h2>
-                {expectedIncomes.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 text-sm">{t('No upcoming income scheduled.')}</div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {expectedIncomes.map(inc => (
-                            <IncomeCard 
-                                key={inc.id} 
-                                income={inc} 
-                                currency={currency} 
-                                t={t} 
-                                onFollowUp={setFollowUpItem}
-                                onMarkReceived={markIncomeReceived}
-                                onDelete={deleteIncome}
-                            />
-                        ))}
+      <div className="flex-1 overflow-y-auto p-6 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Overdue Section */}
+                {overdueIncomes.length > 0 && (
+                    <div className="space-y-2 col-span-full">
+                        <h2 className="text-xs font-bold text-red-500 uppercase tracking-wide ml-1 flex items-center">
+                            <AlertTriangle size={12} className="mr-1" /> {t('Action Required')}
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {overdueIncomes.map(inc => (
+                                <IncomeCard 
+                                    key={inc.id} 
+                                    income={inc} 
+                                    currency={currency} 
+                                    t={t} 
+                                    onFollowUp={setFollowUpItem}
+                                    onMarkReceived={markIncomeReceived}
+                                    onDelete={deleteIncome}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
-            </div>
+                
+                {/* Upcoming Section */}
+                <div className="space-y-2 col-span-full">
+                    <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wide ml-1">{t('Upcoming')}</h2>
+                    {expectedIncomes.length === 0 ? (
+                        <div className="text-center py-10 text-gray-400 text-sm">{t('No upcoming income scheduled.')}</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {expectedIncomes.map(inc => (
+                                <IncomeCard 
+                                    key={inc.id} 
+                                    income={inc} 
+                                    currency={currency} 
+                                    t={t} 
+                                    onFollowUp={setFollowUpItem}
+                                    onMarkReceived={markIncomeReceived}
+                                    onDelete={deleteIncome}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+        </div>
       </div>
 
       {/* Rent Follow Up Sheet */}

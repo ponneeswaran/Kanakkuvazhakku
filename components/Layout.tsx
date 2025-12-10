@@ -1,6 +1,6 @@
 
 import React, { ReactNode, useState } from 'react';
-import { Home, List, Wallet, MessageCircle, Plus } from 'lucide-react';
+import { Home, List, Wallet, Sparkles, Plus } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import AddTransactionModal from './AddTransactionModal';
 
@@ -15,32 +15,30 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
   const [showAddModal, setShowAddModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors relative">
-      <main className="
-        w-full min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors
-        pb-20 md:pb-0 landscape:pb-0
-        md:pr-20 landscape:pr-20"
-      >
-        <div className="w-full h-full">
-           {children}
-        </div>
+    <div className="h-screen w-screen bg-gray-50 dark:bg-slate-900 transition-colors overflow-hidden flex flex-col md:flex-row landscape:flex-row">
+      
+      {/* Main Content Area - Grow to fill space */}
+      <main className="flex-1 h-full w-full overflow-hidden relative order-1 md:order-1 landscape:order-1">
+         {children}
       </main>
 
       {/* Add Transaction Modal */}
       {showAddModal && <AddTransactionModal onClose={() => setShowAddModal(false)} initialTab={activeTab === 'income' ? 'income' : 'expense'} />}
 
-      {/* Navigation - Bottom on Mobile, Right Sidebar on Tablet/Landscape */}
+      {/* Navigation - Flex Item (Fixed height on mobile, Fixed width on desktop via flex) */}
       <nav className="
-        fixed z-50 bg-white dark:bg-slate-900 transition-colors shadow-lg md:shadow-none landscape:shadow-none
-        bottom-0 left-0 right-0 border-t border-gray-100 dark:border-slate-800 pb-safe
-        md:top-0 md:right-0 md:left-auto md:bottom-0 md:w-20 md:h-screen md:border-t-0 md:border-l md:pb-0
-        landscape:top-0 landscape:right-0 landscape:left-auto landscape:bottom-0 landscape:w-20 landscape:h-screen landscape:border-t-0 landscape:border-l landscape:pb-0
+        shrink-0 h-16 w-full md:w-20 md:h-full landscape:w-20 landscape:h-full
+        bg-white dark:bg-slate-900 transition-colors shadow-[0_-1px_3px_rgba(0,0,0,0.1)] md:shadow-none landscape:shadow-none
+        border-t border-gray-100 dark:border-slate-800
+        md:border-t-0 md:border-l landscape:border-t-0 landscape:border-l
+        z-50 pb-safe md:pb-0 landscape:pb-0
+        order-2 md:order-2 landscape:order-2
       ">
         <div className="
           flex items-center
-          justify-between h-16 px-6
-          md:flex-col md:justify-center md:h-full md:space-y-8 md:px-0 md:w-full
-          landscape:flex-col landscape:justify-center landscape:h-full landscape:space-y-8 landscape:px-0 landscape:w-full
+          justify-between h-full px-6
+          md:flex-col md:justify-center md:space-y-8 md:px-0 md:w-full
+          landscape:flex-col landscape:justify-center landscape:space-y-8 landscape:px-0 landscape:w-full
         ">
           
           {/* Home */}
@@ -73,9 +71,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
 
           {/* Center Add Button */}
           <div className="
-            relative -top-5 flex flex-col items-center justify-center
-            md:static md:top-auto md:my-4 md:w-full
-            landscape:static landscape:top-auto landscape:my-4 landscape:w-full
+            relative -top-5 md:top-auto landscape:top-auto
+            md:my-4 landscape:my-4
+            flex flex-col items-center justify-center
           ">
              <button 
                 onClick={() => setShowAddModal(true)}
@@ -107,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
               activeTab === 'ai' ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-slate-500'
             }`}
           >
-            <MessageCircle 
+            <Sparkles 
               size={24} 
               strokeWidth={activeTab === 'ai' ? 2.5 : 2}
             />

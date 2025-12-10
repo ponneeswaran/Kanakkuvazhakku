@@ -104,120 +104,122 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
   };
 
   return (
-    <div className="p-6 space-y-4 animate-fade-in bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
-      {/* Header */}
-      <header className="flex items-center space-x-3 mb-2 sticky top-0 bg-slate-50 dark:bg-slate-950 z-10 py-2 transition-colors">
-        <button 
-          onClick={onBack}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t(category)}</h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400">{filteredAndSortedExpenses.length} {t('records')} • {t('Total')} {currency}{totalAmount.toFixed(2)}</p>
-        </div>
-      </header>
+    <div className="h-full flex flex-col animate-fade-in bg-slate-50 dark:bg-slate-950 transition-colors">
+      <div className="shrink-0 p-6 pb-2 z-10 bg-slate-50 dark:bg-slate-950 transition-colors">
+        {/* Header */}
+        <header className="flex items-center space-x-3 mb-2">
+            <button 
+            onClick={onBack}
+            className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300 transition-colors"
+            >
+            <ArrowLeft size={24} />
+            </button>
+            <div>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t(category)}</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{filteredAndSortedExpenses.length} {t('records')} • {t('Total')} {currency}{totalAmount.toFixed(2)}</p>
+            </div>
+        </header>
 
-      {/* Controls */}
-      <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 space-y-3 transition-colors max-w-4xl">
-        <div className="flex justify-between items-center">
-            {/* Sort Dropdown */}
-            <div className="relative flex items-center space-x-2">
-                <ArrowUpDown size={16} className="text-gray-400 dark:text-slate-400" />
-                <select 
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value as SortOption)}
-                    className="bg-transparent text-sm font-medium text-gray-700 dark:text-white focus:outline-none pr-6 appearance-none"
+        {/* Controls */}
+        <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 space-y-3 transition-colors max-w-4xl">
+            <div className="flex justify-between items-center">
+                {/* Sort Dropdown */}
+                <div className="relative flex items-center space-x-2">
+                    <ArrowUpDown size={16} className="text-gray-400 dark:text-slate-400" />
+                    <select 
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value as SortOption)}
+                        className="bg-transparent text-sm font-medium text-gray-700 dark:text-white focus:outline-none pr-6 appearance-none"
+                    >
+                        <option value="date-desc">{t('Newest First')}</option>
+                        <option value="date-asc">{t('Oldest First')}</option>
+                        <option value="amount-desc">{t('Highest Amount')}</option>
+                        <option value="amount-asc">{t('Lowest Amount')}</option>
+                    </select>
+                </div>
+
+                {/* Filter Toggle */}
+                <button 
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        showFilters || hasActiveFilters 
+                            ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' 
+                            : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300'
+                    }`}
                 >
-                    <option value="date-desc">{t('Newest First')}</option>
-                    <option value="date-asc">{t('Oldest First')}</option>
-                    <option value="amount-desc">{t('Highest Amount')}</option>
-                    <option value="amount-asc">{t('Lowest Amount')}</option>
-                </select>
+                    <Filter size={14} />
+                    <span>{t('Filter')}</span>
+                    {hasActiveFilters && <span className="w-2 h-2 bg-teal-500 rounded-full ml-1"></span>}
+                </button>
             </div>
 
-            {/* Filter Toggle */}
-            <button 
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    showFilters || hasActiveFilters 
-                        ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' 
-                        : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300'
-                }`}
-            >
-                <Filter size={14} />
-                <span>{t('Filter')}</span>
-                {hasActiveFilters && <span className="w-2 h-2 bg-teal-500 rounded-full ml-1"></span>}
-            </button>
-        </div>
-
-        {/* Expandable Filters */}
-        {showFilters && (
-            <div className="pt-3 border-t border-gray-100 dark:border-slate-700 grid grid-cols-1 gap-3 animate-fade-in sm:grid-cols-2">
-                <div className="space-y-1">
-                    <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('From Date')}</label>
-                    <button 
-                        onClick={() => openDatePicker('start')}
-                        className={`w-full text-left text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${dateError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
-                    >
-                        {startDate || t('Select Date')}
-                    </button>
-                </div>
-                <div className="space-y-1">
-                    <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('To Date')}</label>
-                    <button 
-                        onClick={() => openDatePicker('end')}
-                        className={`w-full text-left text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${dateError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
-                    >
-                        {endDate || t('Select Date')}
-                    </button>
-                </div>
-                {dateError && (
-                    <div className="col-span-1 sm:col-span-2 text-xs text-red-500 flex items-center">
-                        <AlertCircle size={10} className="mr-1"/> {dateError}
-                    </div>
-                )}
-
-                <div className="space-y-1">
-                    <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('Min Amount')}</label>
-                    <input 
-                        type="number" 
-                        placeholder="0"
-                        value={minAmount}
-                        onChange={(e) => setMinAmount(e.target.value)}
-                        className={`w-full text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${amountError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
-                    />
-                </div>
-                <div className="space-y-1">
-                    <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('Max Amount')}</label>
-                    <input 
-                        type="number" 
-                        placeholder="Any"
-                        value={maxAmount}
-                        onChange={(e) => setMaxAmount(e.target.value)}
-                        className={`w-full text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${amountError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
-                    />
-                </div>
-                {amountError && (
-                    <div className="col-span-1 sm:col-span-2 text-xs text-red-500 flex items-center">
-                        <AlertCircle size={10} className="mr-1"/> {amountError}
-                    </div>
-                )}
-                
-                {hasActiveFilters && (
-                    <div className="col-span-1 sm:col-span-2 flex justify-end">
+            {/* Expandable Filters */}
+            {showFilters && (
+                <div className="pt-3 border-t border-gray-100 dark:border-slate-700 grid grid-cols-1 gap-3 animate-fade-in sm:grid-cols-2">
+                    <div className="space-y-1">
+                        <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('From Date')}</label>
                         <button 
-                            onClick={resetFilters}
-                            className="text-xs text-red-500 flex items-center space-x-1 px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            onClick={() => openDatePicker('start')}
+                            className={`w-full text-left text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${dateError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
                         >
-                            <X size={12} />
-                            <span>{t('Clear Filters')}</span>
+                            {startDate || t('Select Date')}
                         </button>
                     </div>
-                )}
-            </div>
-        )}
+                    <div className="space-y-1">
+                        <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('To Date')}</label>
+                        <button 
+                            onClick={() => openDatePicker('end')}
+                            className={`w-full text-left text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${dateError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
+                        >
+                            {endDate || t('Select Date')}
+                        </button>
+                    </div>
+                    {dateError && (
+                        <div className="col-span-1 sm:col-span-2 text-xs text-red-500 flex items-center">
+                            <AlertCircle size={10} className="mr-1"/> {dateError}
+                        </div>
+                    )}
+
+                    <div className="space-y-1">
+                        <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('Min Amount')}</label>
+                        <input 
+                            type="number" 
+                            placeholder="0"
+                            value={minAmount}
+                            onChange={(e) => setMinAmount(e.target.value)}
+                            className={`w-full text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${amountError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-xs text-gray-500 dark:text-slate-400 font-medium">{t('Max Amount')}</label>
+                        <input 
+                            type="number" 
+                            placeholder="Any"
+                            value={maxAmount}
+                            onChange={(e) => setMaxAmount(e.target.value)}
+                            className={`w-full text-xs p-2 bg-gray-50 dark:bg-slate-700 border ${amountError ? 'border-red-500' : 'border-gray-200 dark:border-slate-600'} rounded-lg dark:text-white transition-colors`}
+                        />
+                    </div>
+                    {amountError && (
+                        <div className="col-span-1 sm:col-span-2 text-xs text-red-500 flex items-center">
+                            <AlertCircle size={10} className="mr-1"/> {amountError}
+                        </div>
+                    )}
+                    
+                    {hasActiveFilters && (
+                        <div className="col-span-1 sm:col-span-2 flex justify-end">
+                            <button 
+                                onClick={resetFilters}
+                                className="text-xs text-red-500 flex items-center space-x-1 px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                            >
+                                <X size={12} />
+                                <span>{t('Clear Filters')}</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
       </div>
 
       <DatePicker 
@@ -229,7 +231,7 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
       />
 
       {/* Expense List */}
-      <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3">
         {filteredAndSortedExpenses.length === 0 ? (
             <div className="text-center py-12 text-gray-400 dark:text-slate-500">
                 <p>{(dateError || amountError) ? "Please fix filter errors" : t("No expenses found matching your criteria.")}</p>
