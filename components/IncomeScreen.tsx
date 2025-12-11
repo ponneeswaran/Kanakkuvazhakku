@@ -175,7 +175,7 @@ const IncomeScreen: React.FC = () => {
             </header>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6 no-scrollbar">
             {/* Overdue Section */}
             {overdueIncomes.length > 0 && (
                 <div className="space-y-3">

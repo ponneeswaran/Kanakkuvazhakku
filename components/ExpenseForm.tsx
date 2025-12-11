@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Category } from '../types';
@@ -105,7 +106,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onClose }) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl px-6 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-6 shadow-xl max-h-[90vh] h-auto overflow-y-auto transition-colors"
+        className="bg-white dark:bg-slate-800 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl px-6 pt-6 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-6 shadow-xl max-h-[90vh] h-auto overflow-y-auto no-scrollbar transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">

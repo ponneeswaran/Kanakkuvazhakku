@@ -474,7 +474,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6 no-scrollbar">
         {/* Insight Card */}
         <div className="bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -707,7 +707,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onProfileClick, onNavigateToHisto
                             </div>
                         </div>
                         
-                        <div className="flex-1 w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full">
+                        <div className="flex-1 w-full sm:w-1/2 space-y-2 overflow-y-auto max-h-full no-scrollbar">
                             {categoryStats.data.slice(0, 5).map((item, index) => (
                                 <div key={item.name} className="flex items-center justify-between text-sm">
                                     <div className="flex items-center space-x-2">

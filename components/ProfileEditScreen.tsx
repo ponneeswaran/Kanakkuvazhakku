@@ -86,7 +86,7 @@ const ProfileEditScreen: React.FC<ProfileEditScreenProps> = ({ onBack }) => {
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pt-2">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 no-scrollbar">
         <form onSubmit={handleSave} className="space-y-6 max-w-md mx-auto w-full">
             <div className="flex justify-center mb-6">
                 <div className="relative group cursor-pointer" onClick={handleImageClick}>

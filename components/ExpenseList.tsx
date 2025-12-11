@@ -551,7 +551,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
       />
 
       {/* Transaction List (Scrollable) */}
-      <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6 no-scrollbar">
           {Object.entries(groupedTransactions).length === 0 ? (
               <div className="text-center py-20 text-gray-400 dark:text-slate-500">
                   <p>{t('No transactions found.')}</p>

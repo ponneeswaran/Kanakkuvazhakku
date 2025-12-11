@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Category, IncomeCategory, Recurrence } from '../types';
@@ -161,7 +160,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ onClose, init
             </button>
         </div>
 
-        <div className="p-6 overflow-y-auto">
+        <div className="p-6 overflow-y-auto no-scrollbar">
             {activeTab === 'expense' ? (
                 <form onSubmit={handleExpenseSubmit} className="space-y-4">
                     {/* AI Magic Fill */}

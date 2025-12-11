@@ -24,7 +24,7 @@ const TermsScreen: React.FC<TermsScreenProps> = ({ onBack }) => {
         </header>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 text-gray-600 dark:text-slate-300">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 text-gray-600 dark:text-slate-300 no-scrollbar">
          <section>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">1. Acceptance of Terms</h2>
             <p className="text-sm leading-relaxed">

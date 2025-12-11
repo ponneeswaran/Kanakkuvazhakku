@@ -49,7 +49,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6 no-scrollbar">
         <div className="max-w-2xl mx-auto w-full space-y-6">
             {/* Theme Section - Toggle */}
             <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 flex justify-between items-center transition-colors">

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { chatWithFinancialAssistant } from '../services/geminiService';
@@ -161,7 +162,7 @@ const AIChat: React.FC = () => {
           </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
         {chatHistory.map((msg) => (
           <div
             key={msg.id}

@@ -231,7 +231,7 @@ const CategoryExpensesView: React.FC<CategoryExpensesViewProps> = ({ category, o
       />
 
       {/* Expense List */}
-      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-3 no-scrollbar">
         {filteredAndSortedExpenses.length === 0 ? (
             <div className="text-center py-12 text-gray-400 dark:text-slate-500">
                 <p>{(dateError || amountError) ? "Please fix filter errors" : t("No expenses found matching your criteria.")}</p>

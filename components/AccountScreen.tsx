@@ -133,7 +133,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6 no-scrollbar">
         <div className="flex flex-col items-center justify-center py-8">
             <div className="w-24 h-24 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center text-teal-700 dark:text-teal-400 text-4xl font-bold mb-4 shadow-inner overflow-hidden border-4 border-white dark:border-slate-800">
             {userProfile?.profilePicture ? (

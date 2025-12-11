@@ -79,7 +79,7 @@ const BudgetView: React.FC<BudgetViewProps> = ({ onCategorySelect, onBack }) => 
         </header>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 pt-2">
+      <div className="flex-1 overflow-y-auto p-6 pt-2 no-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map(category => {
             const { spent, limit, percentage } = calculateProgress(category);
