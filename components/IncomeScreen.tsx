@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Income } from '../types';
@@ -15,7 +13,16 @@ interface IncomeCardProps {
 }
 
 const IncomeCard: React.FC<IncomeCardProps> = ({ income, currency, t, onFollowUp, onMarkReceived, onDelete }) => {
-    const today = new Date().toISOString().split('T')[0];
+    // Helper for local today
+    const getLocalToday = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const today = getLocalToday();
     // Safety check: Don't show Overdue if date is in the future, regardless of status data
     const isOverdue = income.status === 'Overdue' && income.date < today;
 
@@ -121,14 +128,25 @@ const IncomeScreen: React.FC = () => {
   const { incomes, markIncomeReceived, deleteIncome, currency, t } = useData();
   const [followUpItem, setFollowUpItem] = useState<Income | null>(null);
 
-  const today = new Date().toISOString().split('T')[0];
+  // Helper for local today
+  const getLocalToday = () => {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+  };
+  const today = getLocalToday();
 
-  // Group by status
-  // Only classify as Overdue if status says Overdue AND date is actually in the past
-  const overdueIncomes = incomes.filter(i => i.status === 'Overdue' && i.date < today);
+  // Group by strict date logic to ensure UI consistency
+  // Overdue: Only if status isn't Received AND date < today
+  const overdueIncomes = incomes.filter(i => i.status !== 'Received' && i.date < today);
   
-  // Include Expected, and any Overdue that are actually in future (data correction visual only)
-  const expectedIncomes = incomes.filter(i => i.status === 'Expected' || (i.status === 'Overdue' && i.date >= today)).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Upcoming/Expected: Status isn't Received AND (date >= today OR status is strictly Expected/Overdue but conceptually strictly >= today for 'upcoming' view, but here we group anything >= today)
+  // We effectively split pending items into Past (Overdue) and Present/Future (Upcoming)
+  const expectedIncomes = incomes
+      .filter(i => i.status !== 'Received' && i.date >= today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const handleWhatsAppReminder = (income: Income) => {
       if (!income.tenantContact) {

@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Trash2, Search, RotateCcw, ArrowRight, ArrowUpDown, Filter, X, AlertCircle } from 'lucide-react';
 import { Category, Expense, Income, IncomeCategory } from '../types';
 import DatePicker from './DatePicker';
+import TransactionDetailsModal from './TransactionDetailsModal';
 
 interface ExpenseListProps {
   initialCategory?: Category | 'All';
@@ -17,10 +17,11 @@ interface SwipeableItemProps {
   item: TransactionItem;
   currency: string;
   onDelete: (id: string, type: 'expense' | 'income') => void;
+  onItemClick: (item: TransactionItem) => void;
   t: (key: string) => string;
 }
 
-const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete, t }) => {
+const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete, onItemClick, t }) => {
   const [offsetX, setOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef<number>(0);
@@ -92,6 +93,13 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete,
     }
   };
 
+  const handleClick = () => {
+      // Only trigger click if not swiped open
+      if (offsetX === 0) {
+          onItemClick(item);
+      }
+  };
+
   return (
     <div className="relative overflow-hidden rounded-xl mb-3 select-none">
       <div 
@@ -107,7 +115,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete,
 
       <div
         ref={itemRef}
-        className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700 flex justify-between items-center relative z-10 transition-transform duration-200 ease-out"
+        className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-50 dark:border-slate-700 flex justify-between items-center relative z-10 transition-transform duration-200 ease-out active:bg-gray-50 dark:active:bg-slate-700"
         style={{ 
             transform: `translateX(${offsetX}px)`,
             transition: isDragging ? 'none' : 'transform 0.2s ease-out'
@@ -119,6 +127,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete,
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
       >
         <div className="flex items-center space-x-3 pointer-events-none">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0
@@ -169,6 +178,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
   }>({ isOpen: false, mode: 'start' });
   
   const [deletedItem, setDeletedItem] = useState<{ item: any, type: 'expense' | 'income' } | null>(null);
+  const [selectedItem, setSelectedItem] = useState<TransactionItem | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Long Press Refs
@@ -256,6 +266,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
             deleteExpense(id);
         }
     } else {
+         // Income deletion often is immediate for security in some apps, but we can undo if needed.
+         // However, recurring incomes are tricky to 'undo' perfectly if they triggered logic.
+         // For now, simpler immediate delete for income as per previous component logic, or consistent undo.
+         // Let's keep existing logic: prompt for income.
          if (confirm(t("Delete this income entry?"))) {
              deleteIncome(id);
          }
@@ -548,6 +562,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
                                 item={item}
                                 currency={currency}
                                 onDelete={handleDelete}
+                                onItemClick={setSelectedItem}
                                 t={t}
                             />
                         ))}
@@ -556,6 +571,18 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
              ))
           )}
       </div>
+
+      {/* Details Modal */}
+      {selectedItem && (
+          <TransactionDetailsModal 
+              item={selectedItem}
+              onClose={() => setSelectedItem(null)}
+              onDelete={() => {
+                  handleDelete(selectedItem.id, selectedItem.type);
+                  setSelectedItem(null);
+              }}
+          />
+      )}
 
       {/* Undo Snackbar */}
       <div 

@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Expense, Budget, Category, UserContext, UserProfile, ChatMessage, Income, IncomeCategory, IncomeStatus } from '../types';
 import { t } from '../utils/translations';
@@ -72,20 +70,43 @@ const STORAGE_KEY_CURRENT_USER_ID = 'kanakku_current_user_id';
 // Default budgets removed for new users as requested
 const DEFAULT_BUDGETS: Budget[] = [];
 
+// Helper to get local YYYY-MM-DD to avoid UTC timezone issues
+const getLocalToday = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // Helper to calculate next recurring date safely
 const getNextDate = (dateStr: string, recurrence: string): string => {
-    const d = new Date(dateStr);
+    // Create date from string parts to avoid UTC shifting
+    const parts = dateStr.split('-');
+    const year = parseInt(parts[0]);
+    const monthIndex = parseInt(parts[1]) - 1;
+    const day = parseInt(parts[2]);
+    
+    const d = new Date(year, monthIndex, day);
+    
     if (recurrence === 'Monthly') {
-        const currentMonth = d.getMonth();
-        d.setMonth(currentMonth + 1);
+        d.setMonth(d.getMonth() + 1);
         // Handle month end overflow (e.g. Jan 31 -> Feb 28/29)
-        if (d.getMonth() !== (currentMonth + 1) % 12) {
+        // If the resulting day is different from original day (and original day <= 28), it means overflow occurred but Date auto-fixed it.
+        // But specifically, if we want "Same day of next month", Date.setMonth handles it by spilling over.
+        // We generally check if the date changed unexpectedly.
+        // Actually, simplest check: if original day was > 28, check if result day is < original day (spillover)
+        if (d.getDate() !== day) {
              d.setDate(0); // Set to last day of previous month
         }
     } else if (recurrence === 'Yearly') {
         d.setFullYear(d.getFullYear() + 1);
     }
-    return d.toISOString().split('T')[0];
+    
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dt = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dt}`;
 };
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -133,7 +154,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     if (storedIncomes) {
       let parsedIncomes: Income[] = JSON.parse(storedIncomes);
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalToday();
       let hasChanges = false;
       
       parsedIncomes = parsedIncomes.map(inc => {
@@ -245,7 +266,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Income Methods
   const addIncome = (income: Omit<Income, 'id' | 'createdAt' | 'status'>) => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalToday();
       
       // Determine if the user is entering a past income (Received) or future (Expected)
       const isPast = income.date <= today;
@@ -292,6 +313,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const income = prev.find(i => i.id === id);
           if (!income) return prev;
 
+          const today = getLocalToday();
+
           // 1. Mark current as Received
           // Note: We update the date to "Today" to reflect actual cash flow, 
           // but we use the ORIGINAL date for calculating the next recurrence interval to avoid drift.
@@ -299,7 +322,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const updatedIncome = { 
               ...income, 
               status: 'Received' as IncomeStatus, 
-              date: new Date().toISOString().split('T')[0] 
+              date: today
           }; 
           
           const others = prev.filter(i => i.id !== id);
@@ -309,14 +332,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // 2. Generate Next Recurrence if needed
           if (income.recurrence !== 'None') {
               const nextDateStr = getNextDate(originalDateStr, income.recurrence);
-              const today = new Date().toISOString().split('T')[0];
 
               nextIncome = {
                   ...income,
                   id: crypto.randomUUID(),
                   date: nextDateStr,
                   status: nextDateStr < today ? 'Overdue' : 'Expected',
-                  createdAt: Date.now()
+                  createdAt: Date.now() + 1 // Ensure it's treated as newer
               };
           }
 

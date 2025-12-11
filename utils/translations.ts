@@ -1,8 +1,5 @@
 
 
-
-
-
 export const translations: Record<string, Record<string, string>> = {
   en: {
     // General
@@ -108,6 +105,11 @@ export const translations: Record<string, Record<string, string>> = {
     'Track your limits for this month': 'Track your limits for this month',
     'No budget set': 'No budget set',
     'used': 'used',
+
+    // Transaction Details
+    'Delete Transaction': 'Delete Transaction',
+    'Delete this expense?': 'Delete this expense?',
+    'Status': 'Status',
 
     // AI Chat
     'AI Assistant': 'AI Assistant',
@@ -351,6 +353,11 @@ export const translations: Record<string, Record<string, string>> = {
     'Track your limits for this month': 'இந்த மாத வரம்புகள்',
     'No budget set': 'பட்ஜெட் இல்லை',
     'used': 'பயன்படுத்தப்பட்டது',
+
+    // Transaction Details
+    'Delete Transaction': 'பரிவர்த்தனையை நீக்கு',
+    'Delete this expense?': 'இந்த செலவை நீக்கவா?',
+    'Status': 'நிலை',
 
     // AI Chat
     'AI Assistant': 'AI உதவியாளர்',
