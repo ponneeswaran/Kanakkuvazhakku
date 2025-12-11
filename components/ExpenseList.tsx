@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Trash2, Search, RotateCcw, ArrowRight, ArrowUpDown, Filter, X, AlertCircle } from 'lucide-react';
@@ -191,7 +192,10 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
 
   const allTransactions = useMemo(() => {
       const exps = expenses.map(e => ({ ...e, type: 'expense' as const }));
-      const incs = incomes.map(i => ({ ...i, type: 'income' as const }));
+      // Filter incomes to only include 'Received' entries for History
+      const incs = incomes
+          .filter(i => i.status === 'Received')
+          .map(i => ({ ...i, type: 'income' as const }));
       return [...exps, ...incs];
   }, [expenses, incomes]);
 
