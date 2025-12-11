@@ -149,6 +149,20 @@ export const translations: Record<string, Record<string, string>> = {
     'biometric_not_supported': 'Biometrics not supported on this device.',
     'biometric_login_failed': 'Biometric verification failed.',
 
+    // Encryption
+    'Secure Backup': 'Secure Backup',
+    'Unlock Backup': 'Unlock Backup',
+    'set_backup_password_desc': 'Set a custom password to encrypt this backup file. If you leave it blank, a default key will be used.',
+    'enter_backup_password_desc': 'This backup file is protected. Please enter the password to decrypt it.',
+    'Set Password (Optional)': 'Set Password (Optional)',
+    'Enter Password': 'Enter Password',
+    'Encrypt & Backup': 'Encrypt & Backup',
+    'Skip / Use Default': 'Skip / Use Default',
+    'Decrypt & Restore': 'Decrypt & Restore',
+    'Password is required to decrypt': 'Password is required to decrypt',
+    'Leave blank for default security': 'Leave blank for default security',
+    'Cancel': 'Cancel',
+
     // Profile Edit
     'Edit Profile': 'Edit Profile',
     'Full Name': 'Full Name',
@@ -400,6 +414,20 @@ export const translations: Record<string, Record<string, string>> = {
     'biometric_reg_failed': 'பயோமெட்ரிக் பதிவு தோல்வியடைந்தது.',
     'biometric_not_supported': 'இந்த சாதனத்தில் பயோமெட்ரிக்ஸ் ஆதரிக்கப்படவில்லை.',
     'biometric_login_failed': 'பயோமெட்ரிக் சரிபார்ப்பு தோல்வியடைந்தது.',
+
+    // Encryption
+    'Secure Backup': 'பாதுகாப்பான காப்புப் பிரதி',
+    'Unlock Backup': 'காப்புப் பிரதியைத் திற',
+    'set_backup_password_desc': 'இந்த கோப்பைப் பாதுகாக்க கடவுச்சொல்லை அமைக்கவும். இல்லையெனில் இயல்புநிலை பயன்படுத்தப்படும்.',
+    'enter_backup_password_desc': 'இந்த கோப்பு பாதுகாக்கப்பட்டுள்ளது. திறக்க கடவுச்சொல்லை உள்ளிடவும்.',
+    'Set Password (Optional)': 'கடவுச்சொல் (விருப்பத் தேர்வு)',
+    'Enter Password': 'கடவுச்சொல்லை உள்ளிடவும்',
+    'Encrypt & Backup': 'குறியாக்கம் செய்து சேமி',
+    'Skip / Use Default': 'தவிர் / இயல்புநிலை',
+    'Decrypt & Restore': 'குறிவிலக்கி மீட்டமை',
+    'Password is required to decrypt': 'குறிவிலக்க கடவுச்சொல் தேவை',
+    'Leave blank for default security': 'இயல்புநிலை பாதுகாப்புக்கு காலியாக விடவும்',
+    'Cancel': 'ரத்து',
 
     // Profile Edit
     'Edit Profile': 'சுயவிவரத்தைத் திருத்து',

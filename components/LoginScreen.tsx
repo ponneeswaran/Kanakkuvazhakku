@@ -1,11 +1,11 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, ArrowRight, Smartphone, AlertCircle, Lock, ArrowLeft, CheckCircle2, Loader2, Fingerprint, User, Upload, Clock, Trash2, Smartphone as SmartphoneIcon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import OTPScreen from './OTPScreen';
 import { sendOTPEmail } from '../services/emailService';
 import { LocalBackup } from '../types';
+import EncryptionModal from './EncryptionModal';
 
 interface LoginScreenProps {
   onLoginSuccess: (identifier: string) => void;
@@ -34,6 +34,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onShowTerms }
   const [isRestoring, setIsRestoring] = useState(false);
   const [localBackups, setLocalBackups] = useState<LocalBackup[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Encryption Modal State
+  const [showEncryptionModal, setShowEncryptionModal] = useState(false);
+  const [pendingRestoreSource, setPendingRestoreSource] = useState<File | string | null>(null);
 
   useEffect(() => {
       // Load local backups when in "Create Account" mode
@@ -204,12 +208,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onShowTerms }
     const file = e.target.files?.[0];
     if (file) {
         setIsRestoring(true);
-        const success = await restoreUserFromBackup(file);
-        if (success) {
-            // Success logic is handled by auth state change in context
+        try {
+            const success = await restoreUserFromBackup(file);
+            if (success) {
+                // Success logic is handled by auth state change in context
+            }
+        } catch (err: any) {
+            if (err.message === 'DECRYPTION_FAILED') {
+                setPendingRestoreSource(file);
+                setShowEncryptionModal(true);
+            } else {
+                alert("Restore failed: " + err.message);
+            }
+        } finally {
+            setIsRestoring(false);
+            e.target.value = ''; 
         }
-        setIsRestoring(false);
-        e.target.value = ''; 
     }
   }
 
@@ -217,11 +231,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onShowTerms }
       if(!confirm(t('restore_local_confirm'))) return;
 
       setIsRestoring(true);
-      const success = await restoreUserFromBackup(backup.content);
-      if (success) {
-          // Success
+      try {
+          const success = await restoreUserFromBackup(backup.content);
+          if (success) {
+            // Success logic is handled by auth state change in context
+          }
+      } catch (err: any) {
+          if (err.message === 'DECRYPTION_FAILED') {
+               setPendingRestoreSource(backup.content);
+               setShowEncryptionModal(true);
+          } else {
+               alert("Restore failed: " + err.message);
+          }
+      } finally {
+          setIsRestoring(false);
       }
-      setIsRestoring(false);
+  }
+
+  const handleEncryptionConfirm = async (password: string | undefined) => {
+      setShowEncryptionModal(false);
+      if (!pendingRestoreSource) return;
+
+      setIsRestoring(true);
+      try {
+          const success = await restoreUserFromBackup(pendingRestoreSource, password);
+          if (success) {
+              alert(t('Account restored successfully!'));
+          }
+      } catch (err: any) {
+          alert("Failed to decrypt or restore data. Incorrect password?");
+      } finally {
+          setIsRestoring(false);
+          setPendingRestoreSource(null);
+      }
   }
 
   const handleDeleteLocalBackup = (id: string, e: React.MouseEvent) => {
@@ -564,6 +606,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess, onShowTerms }
             </button>.
         </p>
       </div>
+      
+      <EncryptionModal 
+          isOpen={showEncryptionModal}
+          mode="decrypt"
+          onClose={() => {
+              setShowEncryptionModal(false);
+              setPendingRestoreSource(null);
+          }}
+          onConfirm={handleEncryptionConfirm}
+      />
     </div>
   );
 };

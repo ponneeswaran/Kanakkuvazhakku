@@ -3,16 +3,17 @@
 // Handles Unicode correctly by encoding to UTF-8 bytes first.
 // In a production environment, use Web Crypto API (SubtleCrypto).
 
-const SECRET_KEY = "kanakku_offline_secret_key";
+const DEFAULT_SECRET_KEY = "kanakku_offline_secret_key";
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-export const encryptData = (data: any): string => {
+export const encryptData = (data: any, customKey?: string): string => {
   try {
     const jsonString = JSON.stringify(data);
     // Encode to UTF-8 bytes to handle all unicode characters (Tamil, Emojis, etc.)
     const bytes = textEncoder.encode(jsonString);
-    const keyBytes = textEncoder.encode(SECRET_KEY);
+    const keyToUse = customKey || DEFAULT_SECRET_KEY;
+    const keyBytes = textEncoder.encode(keyToUse);
     
     const encryptedBytes = new Uint8Array(bytes.length);
     
@@ -36,7 +37,7 @@ export const encryptData = (data: any): string => {
   }
 };
 
-export const decryptData = (encryptedString: string): any => {
+export const decryptData = (encryptedString: string, customKey?: string): any => {
   try {
     if (!encryptedString) return null;
     
@@ -48,7 +49,8 @@ export const decryptData = (encryptedString: string): any => {
     }
     
     // XOR Decryption
-    const keyBytes = textEncoder.encode(SECRET_KEY);
+    const keyToUse = customKey || DEFAULT_SECRET_KEY;
+    const keyBytes = textEncoder.encode(keyToUse);
     const decryptedBytes = new Uint8Array(bytes.length);
     
     for (let i = 0; i < bytes.length; i++) {
@@ -58,7 +60,7 @@ export const decryptData = (encryptedString: string): any => {
     const jsonString = textDecoder.decode(decryptedBytes);
     return JSON.parse(jsonString);
   } catch (e) {
-    console.error("Decryption failed", e);
+    // console.error("Decryption failed", e); // Suppress console error as we might retry with different keys
     return null;
   }
 };

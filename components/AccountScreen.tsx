@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useData } from '../contexts/DataContext';
 import { User, Settings, Shield, LogOut, ChevronRight, ArrowLeft, Download, Upload, FileText, Fingerprint, ToggleLeft, ToggleRight } from 'lucide-react';
+import EncryptionModal from './EncryptionModal';
 
 interface AccountScreenProps {
   onBack: () => void;
@@ -15,12 +16,43 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   
+  // Encryption Modal State
+  const [showEncryptionModal, setShowEncryptionModal] = useState(false);
+  const [encryptionMode, setEncryptionMode] = useState<'encrypt' | 'decrypt'>('encrypt');
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleBackup = async () => {
-    setIsBackingUp(true);
-    await backupData();
-    setIsBackingUp(false);
+  const handleBackupClick = () => {
+    setEncryptionMode('encrypt');
+    setShowEncryptionModal(true);
+  };
+
+  const handleEncryptionConfirm = async (password: string | undefined) => {
+      setShowEncryptionModal(false);
+
+      if (encryptionMode === 'encrypt') {
+          // Perform Backup
+          setIsBackingUp(true);
+          await backupData(password);
+          setIsBackingUp(false);
+      } else {
+          // Perform Pending Import (Retry with password)
+          if (pendingImportFile) {
+              setIsImporting(true);
+              try {
+                  const success = await importData(pendingImportFile, password);
+                  if (success) {
+                      alert(t('Data imported successfully!'));
+                  }
+              } catch (e) {
+                  alert("Failed to decrypt or import data. Incorrect password?");
+              } finally {
+                  setIsImporting(false);
+                  setPendingImportFile(null);
+              }
+          }
+      }
   };
 
   const handleExport = async () => {
@@ -42,11 +74,25 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
           }
 
           setIsImporting(true);
-          const success = await importData(file);
-          if (success) {
-              alert(t('Data imported successfully!'));
+          try {
+              // Try importing without password first (default key)
+              const success = await importData(file);
+              if (success) {
+                  alert(t('Data imported successfully!'));
+              }
+          } catch (err: any) {
+              if (err.message === 'DECRYPTION_FAILED') {
+                  // If default key fails, prompt for password
+                  setPendingImportFile(file);
+                  setEncryptionMode('decrypt');
+                  setShowEncryptionModal(true);
+              } else {
+                  alert("Import failed: " + err.message);
+              }
+          } finally {
+              setIsImporting(false);
           }
-          setIsImporting(false);
+          
           e.target.value = ''; // Reset input
       }
   }
@@ -149,7 +195,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
                 </div>
                 
                 <button
-                    onClick={handleBackup}
+                    onClick={handleBackupClick}
                     disabled={isBackingUp}
                     className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors border-b border-gray-100 dark:border-slate-700"
                 >
@@ -216,6 +262,15 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ onBack, onNavigateToProfi
         </div>
       </div>
 
+      <EncryptionModal 
+          isOpen={showEncryptionModal}
+          mode={encryptionMode}
+          onClose={() => {
+              setShowEncryptionModal(false);
+              setPendingImportFile(null);
+          }}
+          onConfirm={handleEncryptionConfirm}
+      />
     </div>
   );
 };
