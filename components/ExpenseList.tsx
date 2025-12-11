@@ -158,7 +158,7 @@ const SwipeableItem: React.FC<SwipeableItemProps> = ({ item, currency, onDelete,
 };
 
 const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNavigateToBudget }) => {
-  const { expenses, incomes, deleteExpense, restoreExpense, deleteIncome, currency, t } = useData();
+  const { expenses, incomes, deleteExpense, restoreExpense, deleteIncome, restoreIncome, currency, t } = useData();
   const [filterCategories, setFilterCategories] = useState<string[]>(['All']);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -266,14 +266,11 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
             deleteExpense(id);
         }
     } else {
-         // Income deletion often is immediate for security in some apps, but we can undo if needed.
-         // However, recurring incomes are tricky to 'undo' perfectly if they triggered logic.
-         // For now, simpler immediate delete for income as per previous component logic, or consistent undo.
-         // Let's keep existing logic: prompt for income.
-         if (confirm(t("Delete this income entry?"))) {
-             deleteIncome(id);
-         }
-         return; 
+        const item = incomes.find(i => i.id === id);
+        if (item) {
+            setDeletedItem({ item, type });
+            deleteIncome(id);
+        }
     }
 
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
@@ -283,8 +280,12 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ initialCategory = 'All', onNa
   };
 
   const handleUndo = () => {
-    if (deletedItem && deletedItem.type === 'expense') {
-        restoreExpense(deletedItem.item);
+    if (deletedItem) {
+        if (deletedItem.type === 'expense') {
+             restoreExpense(deletedItem.item);
+        } else {
+             restoreIncome(deletedItem.item);
+        }
         setDeletedItem(null);
         if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     }

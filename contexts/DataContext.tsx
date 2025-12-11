@@ -3,6 +3,7 @@ import { Expense, Budget, Category, UserContext, UserProfile, ChatMessage, Incom
 import { t } from '../utils/translations';
 import { encryptData, decryptData } from '../utils/security';
 import { sendBackupEmail, sendExportEmail } from '../services/emailService';
+import { getDemoData } from '../utils/demoData';
 
 export type Theme = 'light' | 'dark';
 
@@ -15,6 +16,7 @@ interface DataContextType {
   restoreExpense: (expense: Expense) => void;
   addIncome: (income: Omit<Income, 'id' | 'createdAt' | 'status'>) => void;
   deleteIncome: (id: string) => void;
+  restoreIncome: (income: Income) => void;
   markIncomeReceived: (id: string) => void;
   setBudget: (category: Category, limit: number) => void;
   getBudget: (category: Category) => number;
@@ -53,6 +55,7 @@ interface DataContextType {
   checkBiometricAvailability: (identifier: string) => boolean;
   isBiometricSupported: boolean;
   updateProfileState: (profile: UserProfile) => void;
+  loadDemoData: () => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -92,10 +95,6 @@ const getNextDate = (dateStr: string, recurrence: string): string => {
     if (recurrence === 'Monthly') {
         d.setMonth(d.getMonth() + 1);
         // Handle month end overflow (e.g. Jan 31 -> Feb 28/29)
-        // If the resulting day is different from original day (and original day <= 28), it means overflow occurred but Date auto-fixed it.
-        // But specifically, if we want "Same day of next month", Date.setMonth handles it by spilling over.
-        // We generally check if the date changed unexpectedly.
-        // Actually, simplest check: if original day was > 28, check if result day is < original day (spillover)
         if (d.getDate() !== day) {
              d.setDate(0); // Set to last day of previous month
         }
@@ -308,6 +307,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIncomes(prev => prev.filter(i => i.id !== id));
   };
 
+  const restoreIncome = (income: Income) => {
+      setIncomes(prev => [...prev, income]);
+  };
+
   const markIncomeReceived = (id: string) => {
       setIncomes(prev => {
           const income = prev.find(i => i.id === id);
@@ -337,6 +340,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   ...income,
                   id: crypto.randomUUID(),
                   date: nextDateStr,
+                  // Correctly set status based on strict comparison with today
                   status: nextDateStr < today ? 'Overdue' : 'Expected',
                   createdAt: Date.now() + 1 // Ensure it's treated as newer
               };
@@ -784,6 +788,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
   }
 
+  const loadDemoData = () => {
+    const { expenses, incomes, budgets } = getDemoData();
+    setExpenses(expenses);
+    setIncomes(incomes);
+    setBudgets(budgets);
+  }
+
   const completeSyncAuth = () => {
     setIsSyncAuthRequired(false);
   };
@@ -802,6 +813,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       restoreExpense,
       addIncome,
       deleteIncome,
+      restoreIncome,
       markIncomeReceived,
       setBudget, 
       getBudget, 
@@ -839,7 +851,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       verifyBiometricLogin,
       checkBiometricAvailability,
       isBiometricSupported,
-      updateProfileState
+      updateProfileState,
+      loadDemoData
     }}>
       {children}
     </DataContext.Provider>

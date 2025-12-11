@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { useData } from '../contexts/DataContext';
-import { ArrowLeft, Moon, Sun, ChevronDown, Globe, DollarSign, Check } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, ChevronDown, Globe, DollarSign, Check, Database } from 'lucide-react';
 
 interface SettingsScreenProps {
   onBack: () => void;
 }
 
 const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
-  const { theme, setTheme, currency, setCurrency, language, setLanguage, t } = useData();
+  const { theme, setTheme, currency, setCurrency, language, setLanguage, t, loadDemoData } = useData();
 
   const currencies = [
     { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -26,6 +26,14 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
+
+  const handleLoadDemo = () => {
+      if (confirm("This will replace all your current data with dummy demo data. Are you sure?")) {
+          loadDemoData();
+          alert("Demo data loaded successfully!");
+          onBack();
+      }
+  }
 
   return (
     <div className="h-full flex flex-col animate-fade-in bg-gray-50 dark:bg-slate-900 transition-colors">
@@ -116,6 +124,26 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onBack }) => {
                     </select>
                     <ChevronDown className="absolute right-4 top-3.5 text-gray-400 pointer-events-none" size={18} />
                 </div>
+            </section>
+
+             {/* Demo Data Section */}
+             <section className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
+                <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full">
+                    <Database size={20} />
+                </div>
+                <h2 className="font-semibold text-gray-800 dark:text-white">Developer Options</h2>
+                </div>
+                
+                <button
+                    onClick={handleLoadDemo}
+                    className="w-full py-3 px-4 bg-purple-50 dark:bg-purple-900/10 text-purple-600 dark:text-purple-300 font-bold rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900/20 transition-colors border border-purple-100 dark:border-purple-800"
+                >
+                    Load Demo Data
+                </button>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-2 text-center">
+                    This will replace your current data with sample entries for testing.
+                </p>
             </section>
         </div>
         

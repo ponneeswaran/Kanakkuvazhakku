@@ -102,10 +102,9 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ item,
 
             <button 
                 onClick={() => {
-                    if (confirm(t(isExpense ? 'Delete this expense?' : 'Delete this income entry?'))) {
-                        onDelete();
-                        onClose();
-                    }
+                    // Rely on parent's onDelete logic for undo/confirm behavior
+                    onDelete();
+                    onClose();
                 }}
                 className="w-full py-3 text-red-500 font-semibold text-sm hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
             >

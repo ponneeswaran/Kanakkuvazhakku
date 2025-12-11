@@ -1,0 +1,85 @@
+{
+  "expenses": [
+    {
+      "id": "exp-1",
+      "amount": 150.00,
+      "category": "Food",
+      "description": "Morning Coffee",
+      "date": "2025-12-11",
+      "paymentMethod": "UPI",
+      "createdAt": 1765430000000
+    },
+    {
+      "id": "exp-2",
+      "amount": 450.00,
+      "category": "Transport",
+      "description": "Uber to Office",
+      "date": "2025-12-10",
+      "paymentMethod": "Card",
+      "createdAt": 1765343600000
+    },
+    {
+      "id": "exp-3",
+      "amount": 15000.00,
+      "category": "Housing",
+      "description": "Rent Payment",
+      "date": "2025-12-01",
+      "paymentMethod": "UPI",
+      "createdAt": 1764911600000
+    }
+  ],
+  "incomes": [
+    {
+      "id": "inc-salary-dec",
+      "amount": 100000,
+      "category": "Salary",
+      "source": "Tech Corp",
+      "date": "2025-12-08",
+      "recurrence": "Monthly",
+      "status": "Received",
+      "createdAt": 1765170800000
+    },
+    {
+      "id": "inc-salary-jan",
+      "amount": 100000,
+      "category": "Salary",
+      "source": "Tech Corp",
+      "date": "2026-01-08",
+      "recurrence": "Monthly",
+      "status": "Expected",
+      "createdAt": 1765170800001
+    },
+    {
+      "id": "inc-rent-received",
+      "amount": 15000,
+      "category": "Rent",
+      "source": "Tenant John",
+      "date": "2025-12-05",
+      "recurrence": "Monthly",
+      "status": "Received",
+      "tenantContact": "+919876543210",
+      "createdAt": 1764911600000
+    },
+    {
+      "id": "inc-rent-overdue",
+      "amount": 12000,
+      "category": "Rent",
+      "source": "Tenant Mike",
+      "date": "2025-12-05",
+      "recurrence": "Monthly",
+      "status": "Overdue",
+      "tenantContact": "+919999988888",
+      "createdAt": 1764911600000
+    }
+  ],
+  "budgets": [
+    {
+      "category": "Food",
+      "limit": 5000
+    },
+    {
+      "category": "Transport",
+      "limit": 3000
+    }
+  ]
+}
