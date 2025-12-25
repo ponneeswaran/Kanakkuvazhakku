@@ -36,7 +36,7 @@
 - **Style**: Thin strokes (2px), rounded corners.
 
 ---
-
+-
 ## 3. Core Features
 
 ### A. Authentication & Onboarding
