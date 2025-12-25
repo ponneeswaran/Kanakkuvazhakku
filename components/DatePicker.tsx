@@ -101,11 +101,17 @@ const DatePicker: React.FC<DatePickerProps> = ({ isOpen, onClose, onSelect, init
   const { t } = useData();
   const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
 
-  useEffect(() => {
-    if (isOpen && initialDate) {
-        setSelectedDate(initialDate);
+  // Reset to initialDate whenever the picker opens.
+  // Using useLayoutEffect to ensure update happens before paint.
+  // We explicitly depend only on 'isOpen' to reset when opening, 
+  // and NOT when the parent re-renders (which passes a new initialDate object), 
+  // preventing resets while the user is scrolling.
+  useLayoutEffect(() => {
+    if (isOpen) {
+        setSelectedDate(initialDate || new Date());
     }
-  }, [isOpen, initialDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const months = [
     { label: 'January', value: 0 },
@@ -170,16 +176,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ isOpen, onClose, onSelect, init
         
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-            <div className="flex flex-col items-start">
-                <span className="text-gray-900 dark:text-white font-medium text-lg">{title}</span>
-                <button 
-                    type="button"
-                    onClick={() => setSelectedDate(new Date())}
-                    className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/40 px-2 py-1 rounded-md mt-1 hover:bg-teal-200 dark:hover:bg-teal-900/60 transition-colors"
-                >
-                    {t('Today')}
-                </button>
-            </div>
+            <span className="text-gray-900 dark:text-white font-medium text-lg">{title}</span>
             <span className="text-blue-600 dark:text-blue-400 font-medium text-lg">
                 {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
